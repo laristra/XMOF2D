@@ -30,3 +30,8 @@
 *.exe
 *.out
 *.app
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*

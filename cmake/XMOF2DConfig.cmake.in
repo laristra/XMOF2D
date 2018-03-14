@@ -1,0 +1,52 @@
+#[[
+This file is part of the Ristra XMOF2D project.
+Please see the license file at the root of this repository, or at:
+    https://github.com/laristra/XMOF2D/blob/master/LICENSE
+
+Created by Evgeny Kikinzon.
+Copyright © 2018, Los Alamos National Security, LLC.
+All rights reserved.
+]]
+
+#-----------------------------------------------------------------------------
+#
+# XMOF2D configuration file template
+#
+#-----------------------------------------------------------------------------
+
+# Compiler Definitions
+set(CMAKE_C_COMPILER @CMAKE_C_COMPILER@ CACHE FILEPATH "C Compiler used for compiling XMOF2D")
+set(CMAKE_CXX_COMPILER @CMAKE_CXX_COMPILER@ CACHE FILEPATH "CXX Compiler used for compiling XMOF2D")
+set(CMAKE_Fortran_COMPILER @CMAKE_Fortran_COMPILER@ CACHE FILEPATH "Fortran Compiler used for compiling XMOF2D")
+
+# Compiler Flags
+set(CMAKE_C_FLAGS "@CMAKE_C_FLAGS@" CACHE STRING "XMOF2D C compiler flags")
+set(CMAKE_C_FLAGS_DEBUG "@CMAKE_C_FLAGS_DEBUG@" CACHE STRING "XMOF2D C compiler flags")
+set(CMAKE_C_FLAGS_RELEASE "@CMAKE_C_FLAGS_RELEASE@" CACHE STRING "XMOF2D C compiler flags")
+set(CMAKE_C_FLAGS_MINSIZEREL "@CMAKE_C_FLAGS_MINSIZEREL@" CACHE STRING "XMOF2D C compiler flags")
+set(CMAKE_C_FLAGS_RELWITHDEBINFO "@CMAKE_C_FLAGS_RELWITHDEBINFO@" CACHE STRING "XMOF2D C compiler flags")
+
+set(CMAKE_CXX_FLAGS "@CMAKE_CXX_FLAGS@" CACHE STRING "XMOF2D CXX compiler flags")
+set(CMAKE_CXX_FLAGS_DEBUG "@CMAKE_CXX_FLAGS_DEBUG@" CACHE STRING "XMOF2D CXX compiler flags")
+set(CMAKE_CXX_FLAGS_RELEASE "@CMAKE_CXX_FLAGS_RELEASE@" CACHE STRING "XMOF2D CXX compiler flags")
+set(CMAKE_CXX_FLAGS_MINSIZEREL "@CMAKE_CXX_FLAGS_MINSIZEREL@" CACHE STRING "XMOF2D CXX compiler flags")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "@CMAKE_CXX_FLAGS_RELWITHDEBINFO@" CACHE STRING "XMOF2D CXX compiler flags")
+
+set(CMAKE_Fortran_FLAGS "@CMAKE_Fortran_FLAGS@" CACHE STRING "XMOF2D Fortran compiler flags")
+set(CMAKE_Fortran_FLAGS_DEBUG "@CMAKE_Fortran_FLAGS_DEBUG@" CACHE STRING "XMOF2D Fortran compiler flags")
+set(CMAKE_Fortran_FLAGS_RELEASE "@CMAKE_Fortran_FLAGS_RELEASE@" CACHE STRING "XMOF2D Fortran compiler flags")
+set(CMAKE_Fortran_FLAGS_MINSIZEREL "@CMAKE_Fortran_FLAGS_MINSIZEREL@" CACHE STRING "XMOF2D Fortran compiler flags")
+set(CMAKE_Fortran_FLAGS_RELWITHDEBINFO "@CMAKE_Fortran_FLAGS_RELWITHDEBINFO@" CACHE STRING "XMOF2D Fortran compiler flags")
+
+# XMOF2D Build info
+set(XMOF2D_BUILD_TYPE @CMAKE_BUILD_TYPE@ CACHE STRING "XMOF2D build type")
+
+# XMOF2D library 
+set(XMOF2D_LIBRARY_DIR @INSTALL_DIR@/lib)
+set(XMOF2D_LIBRARY_DIRS @INSTALL_DIR@/lib)
+set(XMOF2D_LIBRARY_NAME @XMOF2DLIB@)
+set(XMOF2D_LIBRARIES @XMOF2DLIB@)
+
+# XMOF2D includes
+set(XMOF2D_INCLUDE_DIR @INSTALL_DIR@/include)
+set(XMOF2D_INCLUDE_DIRS @INSTALL_DIR@/include)
