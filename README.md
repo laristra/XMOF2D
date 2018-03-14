@@ -55,7 +55,7 @@ Please note that the same module for the compiler need to be loaded when running
 # License
 
 This project is licensed under a modified 3-clause BSD license - see
-the [LICENSE](https://github.com/larista/XMOF2D/blob/master/LICENSE)
+the [LICENSE](https://github.com/laristra/XMOF2D/blob/master/LICENSE)
 file for details.
 
 # Release
