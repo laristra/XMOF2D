@@ -344,8 +344,8 @@ std::vector<SimpleConvex> SimpleConvex::SimpleConvexCutByLine(double a2OX, const
   return SC_cuts;
 }
 
-double SimpleConvex::compute_cutting_dist(double a2OX, double cut_vol,
-                                          double frac_eps, double ddot_eps, double dist_eps,
+double SimpleConvex::compute_cutting_dist(double a2OX, double cut_area,
+                                          double area_eps, double ddot_eps, double dist_eps,
                                           int max_iter) {
   std::vector<double> n(2);
   n[0] = cos(a2OX);
@@ -353,50 +353,56 @@ double SimpleConvex::compute_cutting_dist(double a2OX, double cut_vol,
   double n_scal = 1.0/dnrm2(n);
   dscal(n_scal, n);
   
-  double cut_vol_frac = cut_vol/size();
-  
-  double d2orgn = 0.0;
   double full_size = size();
+
   std::vector<double> dbnd = { DBL_MAX, -DBL_MAX };
   for (int i = 0; i < nfaces(); i++) {
     double cur_d = ddot(n, v[i].vec());
-    if (cur_d < dbnd[0])
-    dbnd[0] = cur_d;
-    if (cur_d > dbnd[1])
-    dbnd[1] = cur_d;
+    if (cur_d < dbnd[0]) dbnd[0] = cur_d;
+    if (cur_d > dbnd[1]) dbnd[1] = cur_d;
   }
-  
-  std::vector<double> frac_bnd = { 0.0, 1.0 };
-  double dfrac = 1.0;
+ 
+  if (cut_area < area_eps) return dbnd[0];
+  if (cut_area > full_size - area_eps) return dbnd[1];
+
+  double d2orgn = 0.5*(dbnd[0] + dbnd[1]);
+  std::vector<double> area_bnd = { 0.0, full_size };
+  double area_err = full_size, darea = full_size;
   std::vector<double> cur_dbnd = dbnd;
-  double cur_cut_vol_frac;
+
   bool use_secant = true;
   int iter_count = 0;
   
-  while (dfrac > frac_eps) {
+  while (area_err > area_eps) {
     double sec_coef;
     if (use_secant) {
-      if (is_equal(frac_bnd[0], frac_bnd[1])) {
-        use_secant = false;
-        cur_dbnd = dbnd;
-        d2orgn = 0.5*(dbnd[0] + dbnd[1]);
+      // Both the change in area on the previous step and the max possible change
+      // in area on this step should be above volume tolerance to keep using 
+      // the secant method
+      use_secant = (std::fabs(darea) > area_eps) && 
+                   (std::fabs(area_bnd[1] - area_bnd[0]) > area_eps);
+      if (use_secant) {
+        sec_coef = (cur_dbnd[1] - cur_dbnd[0])/(area_bnd[1] - area_bnd[0]);
+        if (use_secant) {
+          d2orgn = cur_dbnd[1] + sec_coef*(cut_area - area_bnd[1]);
+          use_secant = ((d2orgn > dbnd[0]) == (d2orgn < dbnd[1]));          
+        }
       }
-      else {
-        sec_coef = (cur_dbnd[1] - cur_dbnd[0])/(frac_bnd[1] - frac_bnd[0]);
-        if (sec_coef < frac_eps) {
-          use_secant = false;
+
+      if(!use_secant) {
+        // Secant method failed: fall back to the bisection algorithm
+        bool valid_lower_bnd = (area_bnd[0] < cut_area);
+        if ( valid_lower_bnd != (area_bnd[1] > cut_area) ) {
+          // Target volume fraction is no longer within the current bounds: 
+          // reset current bounds
           cur_dbnd = dbnd;
-          d2orgn = 0.5*(dbnd[0] + dbnd[1]);
         }
-        else {
-          d2orgn = cur_dbnd[0] + sec_coef*(cut_vol_frac - frac_bnd[0]);
-      
-          if ((d2orgn <= dbnd[0]) || (d2orgn >= dbnd[1])) {
-            use_secant = false;
-            cur_dbnd = dbnd;
-            d2orgn = 0.5*(dbnd[0] + dbnd[1]);
-          }
+        else if (!valid_lower_bnd) {
+          // frac_bnd[0] is the upper bound: swap the current bounds
+          std::reverse(cur_dbnd.begin(), cur_dbnd.end());
         }
+
+        d2orgn = 0.5*(cur_dbnd[0] + cur_dbnd[1]);
       }
     }
     else
@@ -412,38 +418,30 @@ double SimpleConvex::compute_cutting_dist(double a2OX, double cut_vol,
       else
       THROW_EXCEPTION(e.what());
     }
+
+    double cur_area = SC_cuts[0].size();
+    area_err = std::fabs(cur_area - cut_area);     
     
-    cur_cut_vol_frac = SC_cuts[0].size()/full_size;
-    
+    iter_count++;
+    if (iter_count > max_iter) {
+      std::clog << "Max iterations count exceeded when finding the cutting distance, " <<
+        "achieved error in area is " << area_err << std::endl;
+      break;
+    }
+
     if (!use_secant) {
-      if (cur_cut_vol_frac > cut_vol_frac)
+      if (cur_area > cut_area)
         cur_dbnd[1] = d2orgn;
       else
         cur_dbnd[0] = d2orgn;
     }
     else {
-      if (!iter_count) {
-        if (cur_cut_vol_frac > cut_vol_frac) {
-          cur_dbnd[1] = d2orgn;
-          frac_bnd[1] = cur_cut_vol_frac;
-        }
-        else {
-          cur_dbnd[0] = d2orgn;
-          frac_bnd[0] = cur_cut_vol_frac;
-        }
-      }
-      else {
-        cur_dbnd[0] = cur_dbnd[1];
-        cur_dbnd[1] = d2orgn;
-        frac_bnd[0] = frac_bnd[1];
-        frac_bnd[1] = cur_cut_vol_frac;
-      }
-    }
-    dfrac = std::fabs(cur_cut_vol_frac - cut_vol_frac);
-    iter_count++;
-    if (iter_count >= max_iter) {
-      std::clog << "Max iterations count exceeded when finding the cutting distance, achieved error in volume fraction is " << dfrac << std::endl;
-      break;
+      darea = cur_area - area_bnd[1];
+
+      cur_dbnd[0] = cur_dbnd[1];
+      cur_dbnd[1] = d2orgn;
+      area_bnd[0] = area_bnd[1];
+      area_bnd[1] = cur_area;
     }
   }
   
@@ -454,7 +452,7 @@ double SimpleConvex::centroid_error(Point2D ref_centroid) {
   return pow(distance(center(), ref_centroid), 2)/size();
 }
 
-double SimpleConvex::compute_optimal_angle(double cut_vol, Point2D ref_centroid, double ang_eps, double frac_eps, double ddot_eps, double dist_eps, int max_iter) {
+double SimpleConvex::compute_optimal_angle(double cut_area, Point2D ref_centroid, double ang_eps, double area_eps, double ddot_eps, double dist_eps, int max_iter) {
   Point2D cur_centroid = center();
   std::vector<double> dcen = cur_centroid - ref_centroid;
   double a2OX = atan2(dcen[1], dcen[0]);
@@ -463,7 +461,7 @@ double SimpleConvex::compute_optimal_angle(double cut_vol, Point2D ref_centroid,
   std::vector<double> guess_err(3);
   int iter_count = 0;
   for (int ia = 0; ia < 3; ia++) {
-    double d2orgn = compute_cutting_dist(a_guess[ia], cut_vol, frac_eps, ddot_eps, dist_eps, max_iter);
+    double d2orgn = compute_cutting_dist(a_guess[ia], cut_area, area_eps, ddot_eps, dist_eps, max_iter);
     std::vector<SimpleConvex> SC_cuts = SimpleConvexCutByLine(a_guess[ia], d2orgn, ddot_eps, dist_eps, true);
     guess_err[ia] = SC_cuts[0].centroid_error(ref_centroid);
   }
@@ -479,7 +477,7 @@ double SimpleConvex::compute_optimal_angle(double cut_vol, Point2D ref_centroid,
       a_guess[0] = a_guess[1] - 2*(a_guess[2] - a_guess[1]);
       std::rotate(guess_err.begin(), guess_err.end() - 1, guess_err.end());
       
-      double d2orgn = compute_cutting_dist(a_guess[0], cut_vol, frac_eps, ddot_eps, dist_eps, max_iter);
+      double d2orgn = compute_cutting_dist(a_guess[0], cut_area, area_eps, ddot_eps, dist_eps, max_iter);
       std::vector<SimpleConvex> SC_cuts = SimpleConvexCutByLine(a_guess[0], d2orgn, ddot_eps, dist_eps, true);
       guess_err[0] = SC_cuts[0].centroid_error(ref_centroid);
     }
@@ -489,7 +487,7 @@ double SimpleConvex::compute_optimal_angle(double cut_vol, Point2D ref_centroid,
       a_guess[2] = a_guess[1] + 2*(a_guess[1] - a_guess[0]);
       std::rotate(guess_err.begin(), guess_err.begin() + 1, guess_err.end());
       
-      double d2orgn = compute_cutting_dist(a_guess[2], cut_vol, frac_eps, ddot_eps, dist_eps, max_iter);
+      double d2orgn = compute_cutting_dist(a_guess[2], cut_area, area_eps, ddot_eps, dist_eps, max_iter);
       std::vector<SimpleConvex> SC_cuts = SimpleConvexCutByLine(a_guess[2], d2orgn, ddot_eps, dist_eps, true);
       guess_err[2] = SC_cuts[0].centroid_error(ref_centroid);
     }
@@ -506,7 +504,7 @@ double SimpleConvex::compute_optimal_angle(double cut_vol, Point2D ref_centroid,
   std::vector<double> gr_guess = { a_guess[0] + (1.0 - gratio)*daguess, a_guess[0] + gratio*daguess };
   std::vector<double> gr_error(2);
   for (int ia = 0; ia < 2; ia++) {
-    double d2orgn = compute_cutting_dist(gr_guess[ia], cut_vol, frac_eps, ddot_eps, dist_eps, max_iter);
+    double d2orgn = compute_cutting_dist(gr_guess[ia], cut_area, area_eps, ddot_eps, dist_eps, max_iter);
     std::vector<SimpleConvex> SC_cuts = SimpleConvexCutByLine(gr_guess[ia], d2orgn, ddot_eps, dist_eps, true);
     gr_error[ia] = SC_cuts[0].centroid_error(ref_centroid);
   }
@@ -522,7 +520,7 @@ double SimpleConvex::compute_optimal_angle(double cut_vol, Point2D ref_centroid,
       gr_error[1] = gr_error[0];
       gr_guess[0] = a_guess[0] + (1.0 - gratio)*daguess;
       
-      double d2orgn = compute_cutting_dist(gr_guess[0], cut_vol, frac_eps, ddot_eps, dist_eps, max_iter);
+      double d2orgn = compute_cutting_dist(gr_guess[0], cut_area, area_eps, ddot_eps, dist_eps, max_iter);
       std::vector<SimpleConvex> SC_cuts = SimpleConvexCutByLine(gr_guess[0], d2orgn, ddot_eps, dist_eps, true);
       gr_error[0] = SC_cuts[0].centroid_error(ref_centroid);
     }
@@ -533,7 +531,7 @@ double SimpleConvex::compute_optimal_angle(double cut_vol, Point2D ref_centroid,
       gr_error[0] = gr_error[1];
       gr_guess[1] = a_guess[0] + gratio*daguess;
       
-      double d2orgn = compute_cutting_dist(gr_guess[1], cut_vol, frac_eps, ddot_eps, dist_eps, max_iter);
+      double d2orgn = compute_cutting_dist(gr_guess[1], cut_area, area_eps, ddot_eps, dist_eps, max_iter);
       std::vector<SimpleConvex> SC_cuts = SimpleConvexCutByLine(gr_guess[1], d2orgn, ddot_eps, dist_eps, true);
       gr_error[1] = SC_cuts[0].centroid_error(ref_centroid);
     }
@@ -544,7 +542,7 @@ double SimpleConvex::compute_optimal_angle(double cut_vol, Point2D ref_centroid,
   return 0.5*(a_guess[0] + a_guess[2]);
 }
 
-void SimpleConvex::compute_optimal_cuts(const std::vector<double>& cut_vol_fracs, const std::vector<Point2D>& ref_centroids, double ang_eps, double frac_eps, double ddot_eps, double dist_eps, int max_iter, std::vector<int>& opt_mat_order, std::vector<double>& opt_a2OX, std::vector<double>& opt_d2orgn) {
+void SimpleConvex::compute_optimal_cuts(const std::vector<double>& cut_vol_fracs, const std::vector<Point2D>& ref_centroids, double ang_eps, double area_eps, double ddot_eps, double dist_eps, int max_iter, std::vector<int>& opt_mat_order, std::vector<double>& opt_a2OX, std::vector<double>& opt_d2orgn) {
   translate2origin();
   
   int nmat = (int) cut_vol_fracs.size();
@@ -559,10 +557,10 @@ void SimpleConvex::compute_optimal_cuts(const std::vector<double>& cut_vol_fracs
     SimpleConvex cur_SC = SimpleConvex(vertices());
     for(int imat = 0; imat < nmat - 1; imat++) {
       int cur_mat = cur_mat_order[imat];
-      double cut_vol = cut_vol_fracs[cur_mat] * size();
+      double cut_area = cut_vol_fracs[cur_mat] * size();
       
-      cur_a2OX[imat] = cur_SC.compute_optimal_angle(cut_vol, ref_centroids[cur_mat] + shift, ang_eps, frac_eps, ddot_eps, dist_eps, max_iter);
-      cur_d2orgn[imat] = cur_SC.compute_cutting_dist(cur_a2OX[imat], cut_vol, frac_eps, ddot_eps, dist_eps, max_iter);
+      cur_a2OX[imat] = cur_SC.compute_optimal_angle(cut_area, ref_centroids[cur_mat] + shift, ang_eps, area_eps, ddot_eps, dist_eps, max_iter);
+      cur_d2orgn[imat] = cur_SC.compute_cutting_dist(cur_a2OX[imat], cut_area, area_eps, ddot_eps, dist_eps, max_iter);
       
       std::vector<SimpleConvex> SC_cuts = cur_SC.SimpleConvexCutByLine(cur_a2OX[imat], cur_d2orgn[imat], ddot_eps, dist_eps, true);
       

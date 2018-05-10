@@ -17,7 +17,7 @@ BaseMesh::BaseMesh(const MeshConfig& config, const IRTolerances& tolerances) {
   dist_eps_ = tolerances.dist_eps;
   ddot_eps_ = tolerances.ddot_eps;
   div_eps_ = tolerances.div_eps;
-  vfrac_eps_ = tolerances.vfrac_eps;
+  area_eps_ = tolerances.area_eps;
   ang_eps_ = tolerances.ang_eps;
   mof_max_iter_ = tolerances.mof_max_iter;
   

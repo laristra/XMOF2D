@@ -121,7 +121,7 @@ int main(int argc, char** argv) {
   delete [] vrt_crds;
   delete [] mat_centroids;
   
-  double dist_tol, div_tol, ddot_tol, vfrac_tol, ang_tol;
+  double dist_tol, div_tol, ddot_tol, area_tol, ang_tol;
   int max_iter_num;
   xmof2d_get_distance_tolerance(&dist_tol);
   std::cout << "Default distance tolerance: " << dist_tol << std::endl;
@@ -130,16 +130,16 @@ int main(int argc, char** argv) {
             << div_tol << std::endl;
   xmof2d_get_dot_product_tolerance(&ddot_tol);
   std::cout << "Default dot product tolerance: " << ddot_tol << std::endl;
-  xmof2d_get_vol_fraction_tolerance(&vfrac_tol);
-  std::cout << "Default volume fraction tolerance: " << vfrac_tol << std::endl;
+  xmof2d_get_area_tolerance(&area_tol);
+  std::cout << "Default area tolerance: " << area_tol << std::endl;
   xmof2d_get_angle_tolerance(&ang_tol);
   std::cout << "Default angle tolerance: " << ang_tol << std::endl;
   xmof2d_get_max_iter_num(&max_iter_num);
   std::cout << "Default max number of iterations: " << max_iter_num << std::endl;
   
-  vfrac_tol = 1.0e-13;
-  std::cout << "Relaxing volume fraction tolerance to " << vfrac_tol << std::endl;
-  xmof2d_set_vol_fraction_tolerance(vfrac_tol);
+  area_tol = 1.0e-13;
+  std::cout << "Relaxing area tolerance to " << area_tol << std::endl;
+  xmof2d_set_area_tolerance(area_tol);
   
   std::cout << "Creating a reconstructor instance..." << std::endl;
   xmof2d_initialize_reconstructor();

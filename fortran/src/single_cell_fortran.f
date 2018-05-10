@@ -13,7 +13,7 @@
 
       integer ivrt, imat, id
       integer nbase_vrts, nmats, max_iter_num
-      real*8  dist_tol, div_tol, ddot_tol, vfrac_tol, ang_tol
+      real*8  dist_tol, div_tol, ddot_tol, area_tol, ang_tol
       real*8, dimension(12)  :: base_cell_vrts
       integer, dimension(4)  :: mat_ids
       real*8, dimension(4)   :: mat_vfracs
@@ -127,16 +127,16 @@
      & intersection formula: ", div_tol
       call xmof2d_get_dot_product_tolerance(ddot_tol)
       print*, "Default dot product tolerance: ", ddot_tol
-      call xmof2d_get_vol_fraction_tolerance(vfrac_tol)
-      print*, "Default volume fraction tolerance: ", vfrac_tol
+      call xmof2d_get_area_tolerance(area_tol)
+      print*, "Default area tolerance: ", area_tol
       call xmof2d_get_angle_tolerance(ang_tol)
       print*, "Default angle tolerance: ", ang_tol
       call xmof2d_get_max_iter_num(max_iter_num)
       print*, "Default max number of iterations: ", max_iter_num
   
-      vfrac_tol = 1.0d-13
-      print*, "Relaxing volume fraction tolerance to ", vfrac_tol
-      call xmof2d_set_vol_fraction_tolerance(vfrac_tol);
+      area_tol = 1.0d-13
+      print*, "Relaxing area tolerance to ", area_tol
+      call xmof2d_set_area_tolerance(area_tol);
 
       print*, "Creating a reconstructor instance..."
       call xmof2d_initialize_reconstructor()

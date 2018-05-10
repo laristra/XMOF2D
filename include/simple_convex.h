@@ -43,10 +43,10 @@ public:
   std::vector<SimpleConvex> SimpleConvexCutByLine(double a2OX, double d2orgn,
                                                   double ddot_eps, double dist_eps,
                                                   bool ipts_check_on);
-  double compute_cutting_dist(double a2OX, double cut_vol_frac,
+  double compute_cutting_dist(double a2OX, double cut_area,
                               double frac_eps, double ddot_eps, double dist_eps, int max_iter);
   double centroid_error(Point2D ref_centroid);
-  double compute_optimal_angle(double cut_vol_frac, Point2D ref_centroid,
+  double compute_optimal_angle(double cut_area, Point2D ref_centroid,
                                double ang_eps, double frac_eps,
                                double ddot_eps, double dist_eps, int max_iter);
   void compute_optimal_cuts(const std::vector<double>& cut_vol_fracs,

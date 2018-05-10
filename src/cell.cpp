@@ -233,7 +233,7 @@ void Cell::ConstructMinimesh(const std::vector<int>& imats, const std::vector<do
   std::vector<double> opt_a2OX(nsubcells - 1);
   std::vector<double> opt_d2orgn(nsubcells - 1);
   
-  cell_SC.compute_optimal_cuts(vfracs, centroids, mesh.ang_eps(), mesh.vfrac_eps(),
+  cell_SC.compute_optimal_cuts(vfracs, centroids, mesh.ang_eps(), mesh.area_eps(),
                                mesh.ddot_eps(), mesh.dist_eps(), mesh.mof_max_iter(),
                                opt_mat_order, opt_a2OX, opt_d2orgn);
   

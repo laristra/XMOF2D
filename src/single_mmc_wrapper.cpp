@@ -15,10 +15,10 @@
 
 XMOF2D::XMOF_Reconstructor* xmof2d_rec = nullptr;
 XMOF2D::IRTolerances xmof2d_tol = {
-  .dist_eps = 1.0e-15,
+  .dist_eps = 1.0e-14,
   .div_eps = 1.0e-6,
   .ddot_eps = 1.0e-14,
-  .vfrac_eps = 1.0e-14,
+  .area_eps = 1.0e-14,
   .ang_eps = 1.0e-13,
   .mof_max_iter = 10000
 };
@@ -58,15 +58,15 @@ void xmof2d_get_dot_product_tolerance(double* ddot_eps) {
   *ddot_eps = xmof2d_tol.ddot_eps;
 }
 
-void xmof2d_set_vol_fraction_tolerance(double vfrac_eps) {
-  if (vfrac_eps <= 0.0) {
+void xmof2d_set_area_tolerance(double area_eps) {
+  if (area_eps <= 0.0) {
     throw XMOF2D::Exception("Volume fraction tolerance should be positive!");
   }
-  xmof2d_tol.vfrac_eps = vfrac_eps;
+  xmof2d_tol.area_eps = area_eps;
 }
 
-void xmof2d_get_vol_fraction_tolerance(double* vfrac_eps) {
-  *vfrac_eps = xmof2d_tol.vfrac_eps;
+void xmof2d_get_area_tolerance(double* area_eps) {
+  *area_eps = xmof2d_tol.area_eps;
 }
 
 void xmof2d_set_angle_tolerance(double ang_eps) {

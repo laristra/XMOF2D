@@ -31,7 +31,7 @@ struct IRTolerances {
   double dist_eps;      //distance tolerance: two points within this distance are considered coincidental
   double div_eps;       //the min value of denominator before switching to bisections when finding line-segment intersections
   double ddot_eps;      //dot product tolerance: for values below this, vectors are considered to have the same direction
-  double vfrac_eps;     //volume fraction tolerance for nested disections
+  double area_eps;     //volume fraction tolerance for nested disections
   double ang_eps;       //angle tolerance for nested disections
   int    mof_max_iter;  //maximum number of iterations when finding the optimal distance or the optimal angle in nested disections
 };
@@ -49,7 +49,7 @@ protected:
   double dist_eps_;
   double div_eps_;
   double ddot_eps_;
-  double vfrac_eps_;
+  double area_eps_;
   double ang_eps_;
   int    mof_max_iter_;
 
@@ -66,7 +66,7 @@ public:
   double dist_eps() const { return dist_eps_; }
   double div_eps() const { return div_eps_; }
   double ddot_eps() const { return ddot_eps_; }
-  double vfrac_eps() const { return vfrac_eps_; }
+  double area_eps() const { return area_eps_; }
   double ang_eps() const { return ang_eps_; }
   int    mof_max_iter() const { return mof_max_iter_; }
   

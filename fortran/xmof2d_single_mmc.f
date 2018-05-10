@@ -49,17 +49,17 @@
           REAL(KIND=C_DOUBLE), INTENT(OUT) :: ddot_eps
         END SUBROUTINE xmof2d_get_dot_product_tolerance
 
-        SUBROUTINE xmof2d_set_vol_fraction_tolerance(vfrac_eps) BIND(C)
+        SUBROUTINE xmof2d_set_area_tolerance(area_eps) BIND(C)
           USE, INTRINSIC :: ISO_C_BINDING
           IMPLICIT NONE
-          REAL(KIND=C_DOUBLE), VALUE, INTENT(IN) :: vfrac_eps
-        END SUBROUTINE xmof2d_set_vol_fraction_tolerance
+          REAL(KIND=C_DOUBLE), VALUE, INTENT(IN) :: area_eps
+        END SUBROUTINE xmof2d_set_area_tolerance
 
-        SUBROUTINE xmof2d_get_vol_fraction_tolerance(vfrac_eps) BIND(C)
+        SUBROUTINE xmof2d_get_area_tolerance(area_eps) BIND(C)
           USE, INTRINSIC :: ISO_C_BINDING
           IMPLICIT NONE
-          REAL(KIND=C_DOUBLE), INTENT(OUT) :: vfrac_eps
-        END SUBROUTINE xmof2d_get_vol_fraction_tolerance
+          REAL(KIND=C_DOUBLE), INTENT(OUT) :: area_eps
+        END SUBROUTINE xmof2d_get_area_tolerance
 
         SUBROUTINE xmof2d_set_angle_tolerance(ang_eps) BIND(C)
           USE, INTRINSIC :: ISO_C_BINDING

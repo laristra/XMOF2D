@@ -46,10 +46,10 @@ int main(int argc, char** argv) {
   }
 
   XMOF2D::IRTolerances ir_tolerances;
-  ir_tolerances.dist_eps = 1.0e-15;
+  ir_tolerances.dist_eps = 1.0e-14;
   ir_tolerances.div_eps = 1.0e-6;
   ir_tolerances.ddot_eps = 1.0e-14;
-  ir_tolerances.vfrac_eps = 1.0e-14;
+  ir_tolerances.area_eps = 1.0e-14;
   ir_tolerances.ang_eps = 1.0e-13;
   ir_tolerances.mof_max_iter = 10000;
   
