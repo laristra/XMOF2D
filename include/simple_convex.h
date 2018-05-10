@@ -44,14 +44,14 @@ public:
                                                   double ddot_eps, double dist_eps,
                                                   bool ipts_check_on);
   double compute_cutting_dist(double a2OX, double cut_area,
-                              double frac_eps, double ddot_eps, double dist_eps, int max_iter);
+                              double area_eps, double ddot_eps, double dist_eps, int max_iter);
   double centroid_error(Point2D ref_centroid);
   double compute_optimal_angle(double cut_area, Point2D ref_centroid,
-                               double ang_eps, double frac_eps,
+                               double ang_eps, double area_eps,
                                double ddot_eps, double dist_eps, int max_iter);
   void compute_optimal_cuts(const std::vector<double>& cut_vol_fracs,
                             const std::vector<Point2D>& ref_centroids,
-                            double ang_eps, double frac_eps,
+                            double ang_eps, double area_eps,
                             double ddot_eps, double dist_eps, int max_iter,
                             std::vector<int>& opt_mat_order,
                             std::vector<double>& opt_a2OX, std::vector<double>& opt_d2orgn);
