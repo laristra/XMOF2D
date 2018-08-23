@@ -182,17 +182,19 @@
     
         allocate(cell_ifaces(cell_nfaces))
         call xmof2d_cell_get_face_ids(icell - 1, cell_ifaces)
+        cell_ifaces = cell_ifaces + 1
         print*, "Indices of faces: ", cell_ifaces(1:cell_nfaces)
         deallocate(cell_ifaces)
       
         allocate(cell_inodes(cell_nfaces))
         call xmof2d_cell_get_node_ids(icell - 1, cell_inodes)
+        cell_inodes = cell_inodes + 1
         print*, "Indices of nodes: ", cell_inodes(1:cell_nfaces)
         print*, ""
 
         do ivrt = 1, cell_nfaces + 1
           id = mod(ivrt - 1, cell_nfaces) + 1
-          call xmof2d_node_get_coords(cell_inodes(id), node_crd)
+          call xmof2d_node_get_coords(cell_inodes(id) - 1, node_crd)
           write(30,*) node_crd(1), node_crd(2)
         end do
         write(30,*) ""
@@ -205,13 +207,17 @@
       do iface = 1, nfaces
         print*, "Face #", iface
         call xmof2d_face_get_node_ids(iface - 1, itail, ihead)
+        itail = itail + 1
+        ihead = ihead + 1
         print*, "Index of the tail node: ", itail
         print*, "Index of the head node: ", ihead
         call xmof2d_face_get_cell_ids(iface - 1, 
      & ileft_cell, iright_cell)
+        ileft_cell = ileft_cell + 1
+        iright_cell = iright_cell + 1
         print*, "Index of the cell to the left: ", ileft_cell
         print*, "Index of the cell to the right: "
-        if (iright_cell == -1) then
+        if (iright_cell == 0) then
           print*, "NONE"
         else
           print*, iright_cell
@@ -232,8 +238,9 @@
         print*, "boundary"
     
         call xmof2d_face_get_parent_face_id(iface - 1, iparent)
+        iparent = iparent + 1
         print*, "Parent face ID: "
-        if (iparent == -1) then
+        if (iparent == 0) then
           print*, "NONE"
         else
           print*, iparent
@@ -254,6 +261,7 @@
         print*, "This is a node of ", node_ncells, " cell(s)"
         allocate(node_icells(node_ncells))
         call xmof2d_node_get_cell_ids(inode - 1, node_icells)
+        node_icells = node_icells + 1
         print*, "Indices of cells: ", node_icells(1:node_ncells)
         deallocate( node_icells)
 
@@ -261,6 +269,7 @@
         print*, "This is a node of ", node_nfaces, " face(s)"
         allocate(node_ifaces(node_nfaces))
         call xmof2d_node_get_face_ids(inode - 1, node_ifaces)
+        node_ifaces = node_ifaces + 1
         print*, "Indices of faces: ", node_ifaces(1:node_nfaces)
         deallocate(node_ifaces)
     
@@ -271,8 +280,9 @@
         endif
         print*, "boundary"
     
-        call xmof2d_node_get_parent_node_id(inode - 1, iparent_node);
-        if (iparent_node == -1) then
+        call xmof2d_node_get_parent_node_id(inode - 1, iparent_node)
+        iparent_node = iparent_node + 1
+        if (iparent_node == 0) then
           print*, "Parent node ID: ", "NONE"
         else
           print*, "Parent node ID: ", iparent_node
@@ -291,6 +301,7 @@
           allocate(node_iparent_faces(node_nparent_faces))
           call xmof2d_node_get_parent_face_ids(inode - 1, 
      & node_iparent_faces)
+          node_iparent_faces = node_iparent_faces + 1
           print*, "Indices of those base faces: ", 
      & node_iparent_faces(1:node_nparent_faces)
           deallocate( node_iparent_faces)
