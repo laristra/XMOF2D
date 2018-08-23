@@ -28,7 +28,7 @@ ARCHOS=${ARCH}_${OS}
 
 # Top level directory where the code lives
 XMOF2D_DIR=${PWD}
-BUILD_TYPE=Debug
+BUILD_TYPE=Release
 
 BUILD_DIR=${XMOF2D_DIR}/build-${BUILD_TYPE}
 INSTALL_DIR=${XMOF2D_DIR}/install-${BUILD_TYPE}

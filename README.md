@@ -1,9 +1,15 @@
 # XMOF2D
 
-The XMOF2D library provides an implementation of the X-MOF interface reconstruction method on meshes with convex polygonal cells. The X-MOF method is based on the Moment-of-Fluid method,
+The XMOF2D library provides an implementation of the X-MOF interface reconstruction method on meshes with convex polygonal cells. The X-MOF method is described in
+
+E. Kikinzon, M. Shashkov, R. Garimella,
+*Establishing mesh topology in multi-material cells: Enabling technology for robust and accurate multi-material simulations*, 
+Computers & Fluids (172), Pages 251-263, 2018,
+
+is based on the Moment-of-Fluid method,
 
 Vadim Dyadechko, Mikhail Shashkov,
-*Reconstruction of multi-material interfaces from moment data,*
+*Reconstruction of multi-material interfaces from moment data*,
 Journal of Computational Physics 227(11), Pages 5361-5384, 2008,
 
 and establishes the topology of meshes inside multi-material cells in a robust and efficient way.
@@ -19,7 +25,7 @@ git clone https://github.com/laristra/XMOF2D.git
 
 ## Prerequisites
 
-XMOF2D uses standard C++11 features, therefore a compatible compiler is required. The build system requires CMake version 2.8.8 or later.
+XMOF2D uses standard C++11 features, therefore a compatible compiler is required. The build system requires CMake version 3.0.2 or later.
 Compiling the Fortran module requires a Fortran compiler compatible with the 2008 standard.
 
 ## Installing
