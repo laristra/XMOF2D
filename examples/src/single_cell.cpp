@@ -137,7 +137,7 @@ int main(int argc, char** argv) {
   xmof2d_get_max_iter_num(&max_iter_num);
   std::cout << "Default max number of iterations: " << max_iter_num << std::endl;
   
-  area_tol = 1.0e-13;
+  area_tol = 1.0e-14;
   std::cout << "Relaxing area tolerance to " << area_tol << std::endl;
   xmof2d_set_area_tolerance(area_tol);
   

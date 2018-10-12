@@ -134,7 +134,7 @@
       call xmof2d_get_max_iter_num(max_iter_num)
       print*, "Default max number of iterations: ", max_iter_num
   
-      area_tol = 1.0d-13
+      area_tol = 1.0d-14
       print*, "Relaxing area tolerance to ", area_tol
       call xmof2d_set_area_tolerance(area_tol);
 
@@ -165,7 +165,7 @@
         call xmof2d_cell_get_center(icell - 1, cell_center)
         print*, "Actual Centroid: (", cell_center(1), ", ",
      & cell_center(2), ")"
-        write(40,410) icell - 1, cell_mat_id, 
+        write(40,410) icell, cell_mat_id, 
      & cell_center(1), cell_center(2)
         iref = 0
         do imat = 1, nmats
@@ -228,7 +228,7 @@
         print*, "Center: (", face_center(1), ", ",
      & face_center(2), ")"
 
-        write(40,211) iface - 1, face_center(1), face_center(2)
+        write(40,211) iface, face_center(1), face_center(2)
 
         call xmof2d_face_is_boundary(iface - 1, is_boundary)
         print*, "This face is ";
@@ -255,7 +255,7 @@
         print*, "Coordinates: (", node_crd(1), ", ",
      & node_crd(2), ")"
 
-        write(40,210) inode - 1, node_crd(1), node_crd(2)
+        write(40,210) inode, node_crd(1), node_crd(2)
 
         call xmof2d_node_get_ncells(inode - 1, node_ncells)
         print*, "This is a node of ", node_ncells, " cell(s)"

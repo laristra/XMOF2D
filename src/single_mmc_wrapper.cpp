@@ -11,23 +11,19 @@
 #ifndef single_mmc_wrapper_cpp
 #define single_mmc_wrapper_cpp
 
+#include <stdlib.h>
+#include <cstdio>
 #include "single_mmc_wrapper.h"
 
 XMOF2D::XMOF_Reconstructor* xmof2d_rec = nullptr;
-XMOF2D::IRTolerances xmof2d_tol = {
-  .dist_eps = 1.0e-14,
-  .div_eps = 1.0e-6,
-  .ddot_eps = 1.0e-14,
-  .area_eps = 1.0e-14,
-  .ang_eps = 1.0e-13,
-  .mof_max_iter = 10000
-};
+XMOF2D::IRTolerances xmof2d_tol;
 XMOF2D::MeshConfig xmof2d_single_mmc_mconfig;
 XMOF2D::CellsMatData xmof2d_mmc_mat_data;
 
 void xmof2d_set_distance_tolerance(double dist_eps) {
   if (dist_eps <= 0.0) {
-    throw XMOF2D::Exception("Distance tolerance should be positive!");
+    fprintf(stderr, "%s", "\nDistance tolerance should be positive!\n");
+    exit(EXIT_FAILURE);
   }
   xmof2d_tol.dist_eps = dist_eps;
 }
@@ -38,7 +34,8 @@ void xmof2d_get_distance_tolerance(double* dist_eps) {
 
 void xmof2d_set_intersect_division_tolerance(double div_eps) {
   if (div_eps <= 0.0) {
-    throw XMOF2D::Exception("Division tolerance should be positive!");
+    fprintf(stderr, "%s", "\nDivision tolerance should be positive!\n");
+    exit(EXIT_FAILURE);
   }
   xmof2d_tol.div_eps = div_eps;
 }
@@ -49,7 +46,8 @@ void xmof2d_get_intersect_division_tolerance(double* div_eps) {
 
 void xmof2d_set_dot_product_tolerance(double ddot_eps) {
   if (ddot_eps <= 0.0) {
-    throw XMOF2D::Exception("Dot product tolerance should be positive!");
+    fprintf(stderr, "%s", "\nDot product tolerance should be positive!\n");
+    exit(EXIT_FAILURE);
   }
   xmof2d_tol.ddot_eps = ddot_eps;
 }
@@ -60,7 +58,8 @@ void xmof2d_get_dot_product_tolerance(double* ddot_eps) {
 
 void xmof2d_set_area_tolerance(double area_eps) {
   if (area_eps <= 0.0) {
-    throw XMOF2D::Exception("Volume fraction tolerance should be positive!");
+    fprintf(stderr, "%s", "\nVolume fraction tolerance should be positive!\n");
+    exit(EXIT_FAILURE);
   }
   xmof2d_tol.area_eps = area_eps;
 }
@@ -71,7 +70,8 @@ void xmof2d_get_area_tolerance(double* area_eps) {
 
 void xmof2d_set_angle_tolerance(double ang_eps) {
   if (ang_eps <= 0.0) {
-    throw XMOF2D::Exception("Angle tolerance should be positive!");
+    fprintf(stderr, "%s", "\nAngle tolerance should be positive!\n");
+    exit(EXIT_FAILURE);
   }
   xmof2d_tol.ang_eps = ang_eps;
 }
@@ -82,7 +82,8 @@ void xmof2d_get_angle_tolerance(double* ang_eps) {
 
 void xmof2d_set_max_iter_num(int mof_max_iter) {
   if (mof_max_iter < 1) {
-    throw XMOF2D::Exception("Max number of iterations should be positive!");
+    fprintf(stderr, "%s", "\nMax number of iterations should be positive!\n");
+    exit(EXIT_FAILURE);
   }
   xmof2d_tol.mof_max_iter = mof_max_iter;
 }
@@ -93,7 +94,8 @@ void xmof2d_get_max_iter_num(int* max_iter) {
 
 void xmof2d_set_mmc_vertices(int nvrts, double* crds) {
   if (nvrts < 3) {
-    throw XMOF2D::Exception("A multi-material cell should have at least three vertices!");
+    fprintf(stderr, "%s", "\nA multi-material cell should have at least three vertices!\n");
+    exit(EXIT_FAILURE);
   }
   xmof2d_single_mmc_mconfig.nodes_coords.resize(nvrts);
   xmof2d_single_mmc_mconfig.ifaces_nodes.resize(nvrts);
@@ -111,7 +113,8 @@ void xmof2d_set_mmc_vertices(int nvrts, double* crds) {
 
 void xmof2d_set_materials_data(int nmaterials, int* mat_ids, double* vol_fractions, double* centroids) {
   if (nmaterials < 2) {
-    throw XMOF2D::Exception("A multi-material cell should contain at least two materials!");
+    fprintf(stderr, "%s", "\nA multi-material cell should contain at least two materials!\n");
+    exit(EXIT_FAILURE);
   }
   xmof2d_mmc_mat_data.cells_materials.resize(1);
   xmof2d_mmc_mat_data.cells_vfracs.resize(1);
@@ -131,7 +134,8 @@ void xmof2d_set_materials_data(int nmaterials, int* mat_ids, double* vol_fractio
 
 void xmof2d_initialize_reconstructor() {
   if (xmof2d_single_mmc_mconfig.icells_faces.empty()) {
-    throw XMOF2D::Exception("Vertices of a multi-material cell should be set first!");
+    fprintf(stderr, "%s", "\nVertices of a multi-material cell should be set first!\n");
+    exit(EXIT_FAILURE);
   }
   
   delete xmof2d_rec;
@@ -147,7 +151,8 @@ void xmof2d_free_reconstructor() {
 
 void xmof2d_perform_reconstruction() {
   if (xmof2d_rec->get_cell_materials(0).empty()) {
-    throw XMOF2D::Exception("Materials data should be set first!");
+    fprintf(stderr, "%s", "\nMaterials data should be set first!\n");
+    exit(EXIT_FAILURE);
   }
   xmof2d_rec->construct_minimesh(0);
 }

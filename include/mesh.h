@@ -28,10 +28,13 @@ struct MeshConfig {
 };
 
 struct IRTolerances {
+  IRTolerances() : dist_eps(1.0e-15), div_eps(1.0e-08), ddot_eps(1.0e-14),
+                   area_eps(1.0e-15), ang_eps(1.0e-14), mof_max_iter(10000) {}
+
   double dist_eps;      //distance tolerance: two points within this distance are considered coincidental
   double div_eps;       //the min value of denominator before switching to bisections when finding line-segment intersections
   double ddot_eps;      //dot product tolerance: for values below this, vectors are considered to have the same direction
-  double area_eps;     //volume fraction tolerance for nested disections
+  double area_eps;      //area tolerance for nested disections
   double ang_eps;       //angle tolerance for nested disections
   int    mof_max_iter;  //maximum number of iterations when finding the optimal distance or the optimal angle in nested disections
 };
