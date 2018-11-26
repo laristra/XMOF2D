@@ -14,11 +14,13 @@
 #include <stdlib.h>
 #include <cstdio>
 #include "single_mmc_wrapper.h"
+#include "cell.h"
 
 XMOF2D::XMOF_Reconstructor* xmof2d_rec = nullptr;
 XMOF2D::IRTolerances xmof2d_tol;
 XMOF2D::MeshConfig xmof2d_single_mmc_mconfig;
 XMOF2D::CellsMatData xmof2d_mmc_mat_data;
+std::vector<int> icell_orig2minimesh;
 
 void xmof2d_set_distance_tolerance(double dist_eps) {
   if (dist_eps <= 0.0) {
@@ -155,6 +157,13 @@ void xmof2d_perform_reconstruction() {
     exit(EXIT_FAILURE);
   }
   xmof2d_rec->construct_minimesh(0);
+
+  const XMOF2D::MiniMesh& minimesh = xmof2d_rec->get_base_mesh().get_cell(0).get_minimesh();
+  int ncells = minimesh.ncells();
+
+  icell_orig2minimesh.resize(ncells);
+  for (int immc = 0; immc < ncells; immc++)
+    icell_orig2minimesh[minimesh.get_orig_icells()[immc]] = immc;
 }
 
 void xmof2d_mesh_get_ncells(int* ncells) {
@@ -173,44 +182,45 @@ void xmof2d_mesh_get_nnodes(int* nnodes) {
 }
 
 void xmof2d_cell_get_mat_id(int icell, int* mat_id) {
-  *mat_id = xmof2d_rec->
-    get_base_mesh().get_cell(0).get_minimesh().get_cell(icell).get_material_index();
+  *mat_id = xmof2d_rec->get_base_mesh().get_cell(0).get_minimesh().
+    get_cell(icell_orig2minimesh[icell]).get_material_index();
 }
 
 void xmof2d_cell_get_nfaces(int icell, int* nfaces) {
-  *nfaces = xmof2d_rec->
-    get_base_mesh().get_cell(0).get_minimesh().get_cell(icell).nfaces();
+  *nfaces = xmof2d_rec->get_base_mesh().get_cell(0).get_minimesh().
+    get_cell(icell_orig2minimesh[icell]).nfaces();
 }
 
 void xmof2d_cell_get_face_ids(int icell, int* ifaces) {
-  const std::vector<int>& cell_ifaces = xmof2d_rec->
-    get_base_mesh().get_cell(0).get_minimesh().get_cell(icell).get_faces();
+  const std::vector<int>& cell_ifaces = xmof2d_rec->get_base_mesh().get_cell(0).get_minimesh().
+    get_cell(icell_orig2minimesh[icell]).get_faces();
   std::copy(cell_ifaces.begin(), cell_ifaces.end(), ifaces);
 }
 
 void xmof2d_cell_get_node_ids(int icell, int* inodes) {
-  const std::vector<int>& cell_inodes = xmof2d_rec->
-    get_base_mesh().get_cell(0).get_minimesh().get_cell(icell).get_nodes();
+  const std::vector<int>& cell_inodes = xmof2d_rec->get_base_mesh().get_cell(0).get_minimesh().
+    get_cell(icell_orig2minimesh[icell]).get_nodes();
   std::copy(cell_inodes.begin(), cell_inodes.end(), inodes);
 }
 
 void xmof2d_cell_get_size(int icell, double* size) {
-  *size = xmof2d_rec->
-    get_base_mesh().get_cell(0).get_minimesh().get_cell(icell).size();
+  *size = xmof2d_rec->get_base_mesh().get_cell(0).get_minimesh().
+    get_cell(icell_orig2minimesh[icell]).size();
 }
 
 void xmof2d_cell_get_center(int icell, double* center_coords) {
-  XMOF2D::Point2D cen_crd = xmof2d_rec->
-    get_base_mesh().get_cell(0).get_minimesh().get_cell(icell).center();
+  XMOF2D::Point2D cen_crd = xmof2d_rec->get_base_mesh().get_cell(0).get_minimesh().
+    get_cell(icell_orig2minimesh[icell]).center();
   center_coords[0] = cen_crd.x;
   center_coords[1] = cen_crd.y;
 }
 
 void xmof2d_face_get_cell_ids(int iface, int* left_cell_id, int* right_cell_id) {
-  *left_cell_id = xmof2d_rec->
-    get_base_mesh().get_cell(0).get_minimesh().get_face(iface).get_cell_index(false);
-  *right_cell_id = xmof2d_rec->
-    get_base_mesh().get_cell(0).get_minimesh().get_face(iface).get_cell_index(true);
+  const XMOF2D::MiniMesh& minimesh = xmof2d_rec->get_base_mesh().get_cell(0).get_minimesh();  
+  *left_cell_id = minimesh.get_orig_icells()[minimesh.get_face(iface).get_cell_index(false)];
+  int mm_right_cell_id = minimesh.get_face(iface).get_cell_index(true);
+  *right_cell_id = (mm_right_cell_id == -1) ? -1 :
+    minimesh.get_orig_icells()[mm_right_cell_id] ;
 }
 
 void xmof2d_face_get_node_ids(int iface, int* tail_id, int* head_id) {
@@ -255,9 +265,10 @@ void xmof2d_node_get_ncells(int inode, int* ncells) {
 }
 
 void xmof2d_node_get_cell_ids(int inode, int* icells) {
-  const std::vector<int>& node_icells = xmof2d_rec->
-    get_base_mesh().get_cell(0).get_minimesh().get_node(inode).get_cells();
-  std::copy(node_icells.begin(), node_icells.end(), icells);
+  const XMOF2D::MiniMesh& minimesh = xmof2d_rec->get_base_mesh().get_cell(0).get_minimesh();
+  const std::vector<int>& node_icells = minimesh.get_node(inode).get_cells();
+  for (int inc = 0; inc < node_icells.size(); inc++)
+    icells[inc] = minimesh.get_orig_icells()[node_icells[inc]];
 }
 
 void xmof2d_node_get_nfaces(int inode, int* nfaces) {

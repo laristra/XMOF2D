@@ -98,6 +98,7 @@ class MiniMesh : public MeshBC {
 private:
   const Cell& base_cell;
   Point2D nodes_shift;
+  std::vector<int> orig_icells;
   
   void translate_2origin();
   void translate_2orig_pos();
@@ -108,7 +109,10 @@ public:
   MiniMesh(const Cell& base_cell_, double div_eps, double ddot_eps, double dist_eps);
   const Cell& get_base_cell() const { return base_cell; }
   const MeshBC& get_parent_mesh() const;
-  
+
+  void set_orig_icells(const std::vector<int>& opt_mat_order) { orig_icells = opt_mat_order; }
+  const std::vector<int>& get_orig_icells() const { return orig_icells; }
+
   friend class Cell;
 };
 

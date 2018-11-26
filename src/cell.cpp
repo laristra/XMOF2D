@@ -242,6 +242,7 @@ void Cell::ConstructMinimesh(const std::vector<int>& imats, const std::vector<do
     isc_mat[isc] = imats[opt_mat_order[isc]];
 
   minimesh->ConstructMinimesh(opt_a2OX, opt_d2orgn, isc_mat);
+  minimesh->set_orig_icells(opt_mat_order);
 }
 
 }
