@@ -33,6 +33,10 @@ const Cell& Node::get_cell(int i) const {
   return mesh.get_cell(cells[i]);
 }
 
+bool Node::has_valid_crd() const {
+  return (coord != BAD_POINT) && isfinite(coord.x) && isfinite(coord.y);
+}
+
 void Node::set_coord(const Point2D& new_coord) {
   XMOF2D_ASSERT(new_coord != BAD_POINT, "Invalid node coordinate!");
   coord = new_coord;

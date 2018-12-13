@@ -8,6 +8,7 @@
  All rights reserved.
 */
 
+#include <set>
 #include "mesh.h"
 #include "exception.h"
 
@@ -24,16 +25,27 @@ BaseMesh::BaseMesh(const MeshConfig& config, const IRTolerances& tolerances) {
   cells_material = config.cells_material;
   
   int nnodes = (int) config.nodes_coords.size();
-  for (int inode = 0; inode < nnodes; inode++)
+  for (int inode = 0; inode < nnodes; inode++) {
     nodes.push_back(Node(config.nodes_coords[inode], inode, *this));
+    XMOF2D_ASSERT(nodes[inode].has_valid_crd(), "Provided node #" << inode << 
+      " has invalid coordinates!");
+  }
   
   int nfaces = (int) config.ifaces_nodes.size();
-  for (int iface = 0; iface < nfaces; iface++)
+  for (int iface = 0; iface < nfaces; iface++) {
+    XMOF2D_ASSERT(config.ifaces_nodes[iface].size() == 2, "Provided face #" << iface << 
+      " should have two nodes!");
+    XMOF2D_ASSERT(config.ifaces_nodes[iface][0] != config.ifaces_nodes[iface][1], 
+      "Provided face #" << iface << " is of measure zero!");
     faces.push_back(Face({config.ifaces_nodes[iface][0], config.ifaces_nodes[iface][1]}, iface, *this));
+  }
     
   int ncells = (int) config.icells_faces.size();
   for (int icell = 0; icell < ncells; icell++) {
     int nsides = (int) config.icells_faces[icell].size();
+    XMOF2D_ASSERT(nsides == 
+      std::set<int>(config.icells_faces[icell].begin(), config.icells_faces[icell].end()).size(), 
+      "Provided cell #" << icell << " has repeated faces!");
     for (int iside = 0; iside < nsides; iside++) {
       int iface = config.icells_faces[icell][iside];
       if (get_face(iface).get_cell_index(false) == -1)

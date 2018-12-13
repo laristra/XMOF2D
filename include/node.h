@@ -12,6 +12,7 @@
 #define node_h
 
 #include <vector>
+#include <math.h>
 #include "geometry.h"
 
 namespace XMOF2D {
@@ -36,6 +37,7 @@ public:
   int index() const { return node_ind; }
   int iparent() const { return parent_ind; }
   const Point2D& get_crd() const { return coord; };
+  bool has_valid_crd() const;
   
   bool is_boundary() const;
   std::vector<int> iparent_faces() const;
@@ -48,7 +50,7 @@ public:
   const Face& get_face(int i) const;
   const Cell& get_cell(int i) const;
   const MeshBC& get_mesh() const {return mesh; }
-  
+
   void set_coord(const Point2D& new_coord);
   void set_parent(int parent);
   void set_faces(const std::vector<int>& ifaces) { faces = ifaces; }
