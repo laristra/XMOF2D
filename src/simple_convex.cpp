@@ -472,33 +472,8 @@ double SimpleConvex::compute_optimal_angle(double cut_area, Point2D ref_centroid
   while (!inside_bracket) {
     XMOF2D_ASSERT(iter_count < max_iter, "Max iterations count exceeded while bracketing the optimal angle!");
     
-    if (guess_err[0] < guess_err[2] - dist_eps) {
-      if (guess_err[0] <= guess_err[1] + dist_eps) {
-        std::rotate(a_guess.begin(), a_guess.end() - 1, a_guess.end());
-        a_guess[0] = a_guess[1] - 2*(a_guess[2] - a_guess[1]);
-        std::rotate(guess_err.begin(), guess_err.end() - 1, guess_err.end());
-        
-        double d2orgn = compute_cutting_dist(a_guess[0], cut_area, area_eps, ddot_eps, dist_eps, max_iter);
-        std::vector<SimpleConvex> SC_cuts = SimpleConvexCutByLine(a_guess[0], d2orgn, ddot_eps, dist_eps, true);
-        guess_err[0] = SC_cuts[0].centroid_error(ref_centroid);
-        if (guess_err[0] < dist_eps) return a_guess[0];
-      }
-      else inside_bracket = true;
-    }
-    else if (guess_err[2] < guess_err[0] - dist_eps) {
-      if (guess_err[2] <= guess_err[1] + dist_eps) {
-        std::rotate(a_guess.begin(), a_guess.begin() + 1, a_guess.end());
-        a_guess[2] = a_guess[1] + 2*(a_guess[1] - a_guess[0]);
-        std::rotate(guess_err.begin(), guess_err.begin() + 1, guess_err.end());
-        
-        double d2orgn = compute_cutting_dist(a_guess[2], cut_area, area_eps, ddot_eps, dist_eps, max_iter);
-        std::vector<SimpleConvex> SC_cuts = SimpleConvexCutByLine(a_guess[2], d2orgn, ddot_eps, dist_eps, true);
-        guess_err[2] = SC_cuts[0].centroid_error(ref_centroid);
-        if (guess_err[2] < dist_eps) return a_guess[2];        
-      }
-      else inside_bracket = true;
-    }
-    else if (std::min(guess_err[0], guess_err[2]) <= guess_err[1] + dist_eps) {
+    if ( (std::fabs(guess_err[1] - guess_err[0]) <= dist_eps) ||
+         (std::fabs(guess_err[1] - guess_err[2]) <= dist_eps) ) {
       a_guess[0] -= a_guess[1] - a_guess[0];
       a_guess[2] += a_guess[2] - a_guess[1];
 
@@ -511,6 +486,29 @@ double SimpleConvex::compute_optimal_angle(double cut_area, Point2D ref_centroid
       SC_cuts = SimpleConvexCutByLine(a_guess[2], d2orgn, ddot_eps, dist_eps, true);
       guess_err[2] = SC_cuts[0].centroid_error(ref_centroid);
       if (guess_err[2] < dist_eps) return a_guess[2];
+    }
+    else if ( (guess_err[0] < guess_err[1]) ||
+              (guess_err[2] < guess_err[1]) ) {
+      if (guess_err[0] < guess_err[2]) {
+        std::rotate(a_guess.begin(), a_guess.end() - 1, a_guess.end());
+        a_guess[0] = a_guess[1] - 2*(a_guess[2] - a_guess[1]);
+        std::rotate(guess_err.begin(), guess_err.end() - 1, guess_err.end());
+        
+        double d2orgn = compute_cutting_dist(a_guess[0], cut_area, area_eps, ddot_eps, dist_eps, max_iter);
+        std::vector<SimpleConvex> SC_cuts = SimpleConvexCutByLine(a_guess[0], d2orgn, ddot_eps, dist_eps, true);
+        guess_err[0] = SC_cuts[0].centroid_error(ref_centroid);
+        if (guess_err[0] < dist_eps) return a_guess[0];
+      }
+      else {
+        std::rotate(a_guess.begin(), a_guess.begin() + 1, a_guess.end());
+        a_guess[2] = a_guess[1] + 2*(a_guess[1] - a_guess[0]);
+        std::rotate(guess_err.begin(), guess_err.begin() + 1, guess_err.end());
+        
+        double d2orgn = compute_cutting_dist(a_guess[2], cut_area, area_eps, ddot_eps, dist_eps, max_iter);
+        std::vector<SimpleConvex> SC_cuts = SimpleConvexCutByLine(a_guess[2], d2orgn, ddot_eps, dist_eps, true);
+        guess_err[2] = SC_cuts[0].centroid_error(ref_centroid);
+        if (guess_err[2] < dist_eps) return a_guess[2];        
+      }
     }
     else inside_bracket = true;
 
