@@ -15,6 +15,18 @@ namespace XMOF2D {
 XMOF_Reconstructor::XMOF_Reconstructor(const MeshConfig& mesh_config, const IRTolerances& ir_tolerances) : mesh(mesh_config, ir_tolerances) {}
 
 void XMOF_Reconstructor::set_materials_data(const CellsMatData& mat_data) {
+  XMOF2D_ASSERT(mat_data.cells_materials.size() == mesh.ncells(),
+    "Provided material data is for a mesh with a different number of cells!");
+  for (int icell = 0; icell < mesh.ncells(); icell++) {
+    int ncmats = (int) mat_data.cells_vfracs[icell].size();
+    for (int icmat = 0; icmat < ncmats; icmat++) {
+      double cmat_vol = mat_data.cells_vfracs[icell][icmat]*mesh.get_cell(icell).size();
+      XMOF2D_ASSERT(cmat_vol > mesh.area_eps(), "Given area for material " << 
+        mat_data.cells_materials[icell][icmat] << " in cell " << icell <<
+        " is " << cmat_vol << ", which is below the area tolerance of " << mesh.area_eps());
+    }
+  }
+
   cells_materials = mat_data.cells_materials;
   cells_vfracs = mat_data.cells_vfracs;
   cells_centroids = mat_data.cells_centroids;

@@ -256,10 +256,10 @@ std::vector<SimpleConvex> SimpleConvex::SimpleConvexCutByLine(double a2OX, const
           int inearest_vrt = -1;
           std::vector<double> dpts(3, DBL_MAX);
           for (int ivrt = 0; ivrt < 2; ivrt++) {
-            double cur_dist = distance(cur_side[ivrt], int_point);
-            if (cur_dist < dpts[1]) {
+            if (cur_side[ivrt].PosWRT2Line(n, d2orgn, dist_eps) == Point2DLine::Position::BELOW) {
+              dpts[1] = distance(cur_side[ivrt], int_point);
               inearest_vrt = ivrt;
-              dpts[1] = cur_dist;
+              break;
             }
           }
           int inearest_ipt = 0;
