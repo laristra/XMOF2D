@@ -12,7 +12,6 @@
 #define node_h
 
 #include <vector>
-#include <math.h>
 #include "geometry.h"
 
 namespace XMOF2D {

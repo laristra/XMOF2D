@@ -34,7 +34,7 @@ const Cell& Node::get_cell(int i) const {
 }
 
 bool Node::has_valid_crd() const {
-  return (coord != BAD_POINT) && isfinite(coord.x) && isfinite(coord.y);
+  return (coord != BAD_POINT) && std::isfinite(coord.x) && std::isfinite(coord.y);
 }
 
 void Node::set_coord(const Point2D& new_coord) {
