@@ -193,9 +193,8 @@ std::vector<SimpleConvex> SimpleConvex::SimpleConvexCutByLine(double a2OX, const
   std::vector<Point2D> v_below;
   std::vector<Point2D> v_above;
   int int_point_ind[2] = {-1, -1};
-  double scsides_eps = sqrt(2*epsilon);
-  int eps_exp;
-  frexp(epsilon, &eps_exp);
+  int nearest_lhp_ivrt[2] = {-1, -1};
+
   switch (vertex(0).PosWRT2Line(n, d2orgn, dist_eps)) {
     case Point2DLine::Position::BELOW:
       v_below.push_back(vertex(0));
@@ -252,66 +251,25 @@ std::vector<SimpleConvex> SimpleConvex::SimpleConvexCutByLine(double a2OX, const
         
       case SegLine::Position::INTERSECTS: {
         Point2D int_point = cur_side.LineIntersect(n, d2orgn);
-        if (area_check_on && (int_point_ind[0] != -1)) {
-          int inearest_vrt = -1;
-          std::vector<double> dpts(3, DBL_MAX);
+        XMOF2D_ASSERT(int_point_ind[1] == -1, "Extra intersection!");
+        int iip = (int_point_ind[0] == -1) ? 0 : 1;
+
+        if (area_check_on) {          
           for (int ivrt = 0; ivrt < 2; ivrt++) {
             if (cur_side[ivrt].PosWRT2Line(n, d2orgn, dist_eps) == Point2DLine::Position::BELOW) {
-              dpts[1] = distance(cur_side[ivrt], int_point);
-              inearest_vrt = ivrt;
+              nearest_lhp_ivrt[iip] = (iside + ivrt)%nsides;
               break;
             }
           }
-          int inearest_ipt = 0;
-          dpts[0] = distance(cur_side[inearest_vrt], v_below[int_point_ind[0]]);
-          if (int_point_ind[1] != -1) {
-            double d_alt = distance(cur_side[inearest_vrt], v_below[int_point_ind[1]]);
-            if (d_alt < dpts[0]) {
-              dpts[0] = d_alt;
-              inearest_ipt = 1;
-            }
+
+          if (nearest_lhp_ivrt[0] == nearest_lhp_ivrt[1]) {
+            XMOF2D_ASSERT(std::fabs(vpz(vertex(nearest_lhp_ivrt[1]), int_point, 
+                                        v_below[int_point_ind[0]])) >= 2*epsilon,
+                          "Area of the cutoff is below the machine epsilon!");
           }
-          dpts[2] = distance(v_below[int_point_ind[inearest_ipt]], int_point);
-          
-          bool duplicate_intersection = false;
-          for (int ipair = 0; ipair < 2; ipair++) {
-            bool check_exponents = false;
-            if (dpts[ipair] < scsides_eps) {
-              if (dpts[ipair + 1] < scsides_eps) {
-                duplicate_intersection = true;
-                break;
-              }
-              else 
-                check_exponents = true;
-            }
-            else if (dpts[ipair + 1] < scsides_eps)
-              check_exponents = true;
-            
-            if (check_exponents) {
-              int d1_exp, d2_exp;
-              frexp(dpts[ipair], &d1_exp);
-              frexp(dpts[ipair + 1], &d2_exp);
-              if (d1_exp + d2_exp <= eps_exp) {
-                duplicate_intersection = true;
-                break;
-              }
-            }  
-          }
-            
-          if (duplicate_intersection) {
-            if (cur_side[1].PosWRT2Line(n, d2orgn, dist_eps) == Point2DLine::Position::BELOW)
-              v_below.push_back(cur_side[1]);
-            else
-              v_above.push_back(cur_side[1]);
-            continue;
-          } 
         }
-        XMOF2D_ASSERT(int_point_ind[1] == -1, "Extra intersection!");
         
-        if (int_point_ind[0] == -1)
-          int_point_ind[0] = (int) v_below.size();
-        else
-          int_point_ind[1] = (int) v_below.size();
+        int_point_ind[iip] = (int) v_below.size();
         
         v_below.push_back(int_point);
         v_above.push_back(int_point);
@@ -330,7 +288,8 @@ std::vector<SimpleConvex> SimpleConvex::SimpleConvexCutByLine(double a2OX, const
     }
   }
   
-  XMOF2D_ASSERT((int_point_ind[0] != -1) && (int_point_ind[1] != -1), "Missing intersection!");
+  XMOF2D_ASSERT((int_point_ind[0] != -1) && (int_point_ind[1] != -1), 
+                "Less than two intersection points!");
   
   if (v_below[0] == v_below[v_below.size() - 1])
     v_below.resize(v_below.size() - 1);
