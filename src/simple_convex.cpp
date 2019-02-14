@@ -283,7 +283,7 @@ std::vector<SimpleConvex> SimpleConvex::SimpleConvexCutByLine(double a2OX, const
       }
         
       default:
-        THROW_EXCEPTION("Infeasible line/convex polygon intersection!");
+        THROW_EXCEPTION("Side lies on the cutting line!");
         break;
     }
   }
@@ -342,10 +342,8 @@ double SimpleConvex::compute_cutting_dist(double a2OX, double cut_area,
                    (std::fabs(area_bnd[1] - area_bnd[0]) > area_eps);
       if (use_secant) {
         sec_coef = (cur_dbnd[1] - cur_dbnd[0])/(area_bnd[1] - area_bnd[0]);
-        if (use_secant) {
-          d2orgn = cur_dbnd[1] + sec_coef*(cut_area - area_bnd[1]);
-          use_secant = ((d2orgn > dbnd[0]) == (d2orgn < dbnd[1]));          
-        }
+        d2orgn = cur_dbnd[1] + sec_coef*(cut_area - area_bnd[1]);
+        use_secant = ((d2orgn > dbnd[0]) == (d2orgn < dbnd[1]));          
       }
 
       if(!use_secant) {
@@ -368,17 +366,31 @@ double SimpleConvex::compute_cutting_dist(double a2OX, double cut_area,
       d2orgn = 0.5*(cur_dbnd[0] + cur_dbnd[1]);
     
     std::vector<SimpleConvex> SC_cuts;
+    double cur_area;
     try {
       SC_cuts = SimpleConvexCutByLine(a2OX, d2orgn, ddot_eps, dist_eps, false);
     }
     catch (Exception e) {
       if (e.is("Extra intersection!"))
-      SC_cuts = SimpleConvexCutByLine(a2OX, d2orgn, ddot_eps, dist_eps, true);
-      else
-      THROW_EXCEPTION(e.what());
+        SC_cuts = SimpleConvexCutByLine(a2OX, d2orgn, ddot_eps, dist_eps, true);
+      else if (e.is("Side lies on the cutting line!")) {
+        //Distance check with the original bounds: 
+        //we either sliced off nothing or everything
+        cur_area = (std::fabs(d2orgn - dbnd[0]) < std::fabs(d2orgn - dbnd[1])) ? 
+          0.0 : full_size;
+        darea = cur_area - area_bnd[1];
+
+        cur_dbnd[0] = cur_dbnd[1];
+        cur_dbnd[1] = d2orgn;
+        area_bnd[0] = area_bnd[1];
+        area_bnd[1] = cur_area;
+
+        continue;                    
+      } 
+      else THROW_EXCEPTION(e.what());
     }
 
-    double cur_area = SC_cuts[0].size();
+    cur_area = SC_cuts[0].size();
     area_err = std::fabs(cur_area - cut_area);     
     
     iter_count++;

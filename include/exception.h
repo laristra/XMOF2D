@@ -26,7 +26,10 @@ public:
   virtual ~Exception() throw() { }
   
   const char* what() const throw () { return msg.c_str(); }
-  bool is(std::string expected_msg) { return msg == expected_msg; }
+  bool is(std::string expected_msg) { 
+    std::size_t found = msg.find(expected_msg);
+    return found != std::string::npos; 
+  }
 };
 
 #define THROW_EXCEPTION(what) \
