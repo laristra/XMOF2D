@@ -74,9 +74,7 @@ void MiniMesh::Split(int cell_ind, const std::vector<double>& n, double d2orgn, 
   int nsides = cur_cell.nfaces();
   std::vector< std::vector<int> > cells_faces(2);
   int int_point_ind[2] = {-1, -1};
-  double scsides_eps = sqrt(2*epsilon);
-  int eps_exp;
-  frexp(epsilon, &eps_exp);
+  int nearest_lhp_ivrt[2] = {-1, -1};
   int iside = 0, ilastside = nsides - 1;
   while (iside <= ilastside) {
     int icurface = cur_cell.get_face_index(iside);
@@ -110,14 +108,14 @@ void MiniMesh::Split(int cell_ind, const std::vector<double>& n, double d2orgn, 
           faces[icurface].set_cell_index(in_normal, new_cell_ind[1], true);
         }
 
-        XMOF2D_ASSERT(iside != ilastside, "Zero volume intersection!");
+        XMOF2D_ASSERT(iside != ilastside, "Face lies on the cutting line!");
 
         int iadjface = cur_cell.get_face_index(iside + 1);
         if ((int_point_ind[iip] == get_face(iadjface).get_node_index(0)) ||
-            (get_face(icurface).get_node_index(iv_on) == get_face(iadjface).get_node_index(1)))
+            (int_point_ind[iip] == get_face(iadjface).get_node_index(1)))
           iside += 2;
         else {
-          XMOF2D_ASSERT(iside == 0, "Zero volume intersection!");
+          XMOF2D_ASSERT(iside == 0, "Face lies on the cutting line!");
           iadjface = cur_cell.get_face_index(nsides - 1);
           iside++; ilastside--;
         }
@@ -131,68 +129,25 @@ void MiniMesh::Split(int cell_ind, const std::vector<double>& n, double d2orgn, 
         
       case SegLine::Position::INTERSECTS: {
         Point2D int_point = cur_side.LineIntersect(n, d2orgn);
-        if (int_point_ind[0] != -1) {
-          int inearest_node = -1;
-          std::vector<double> dpts(3, DBL_MAX);
-          for (int inode = 0; inode < 2; inode++) {
-            double cur_dist = distance(cur_side[inode], int_point);
-            if (cur_dist < dpts[1]) {
-              inearest_node = inode;
-              dpts[1] = cur_dist;
-            }
-          }
-          int inearest_ipt = 0;
-          dpts[0] = distance(cur_side[inearest_node], get_node_crd(int_point_ind[0]));
-          if (int_point_ind[1] != -1) {
-            double d_alt = distance(cur_side[inearest_node], get_node_crd(int_point_ind[1]));
-            if (d_alt < dpts[0]) {
-              dpts[0] = d_alt;
-              inearest_ipt = 1;
-            }
-          }
-          dpts[2] = distance(get_node_crd(int_point_ind[inearest_ipt]), int_point);
-          
-          bool duplicate_intersection = false;
-          for (int ipair = 0; ipair < 2; ipair++) {
-            bool check_exponents = false;
-            if (dpts[ipair] < scsides_eps) {
-              if (dpts[ipair + 1] < scsides_eps) {
-                duplicate_intersection = true;
-                break;
-              }
-              else 
-                check_exponents = true;
-            }
-            else if (dpts[ipair + 1] < scsides_eps)
-              check_exponents = true;
-            
-            if (check_exponents) {
-              int d1_exp, d2_exp;
-              frexp(dpts[ipair], &d1_exp);
-              frexp(dpts[ipair + 1], &d2_exp);
-              if (d1_exp + d2_exp <= eps_exp) {
-                duplicate_intersection = true;
-                break;
-              }
-            }  
-          }
-            
-          if (duplicate_intersection) {
-            int iv_off = (inearest_node + 1)%2;
-            int ifset = (cur_side[iv_off].PosWRT2Line(n, d2orgn, dist_eps()) == Point2DLine::Position::BELOW)
-                    ? 0 : 1;
-            cells_faces[ifset].push_back(icurface);
-            iside++;
-            continue;
+        XMOF2D_ASSERT(int_point_ind[1] == -1, "Extra intersection!");
+        int iip = (int_point_ind[0] == -1) ? 0 : 1;
+
+        for (int ivrt = 0; ivrt < 2; ivrt++) {
+          if (cur_side[ivrt].PosWRT2Line(n, d2orgn, dist_eps()) == Point2DLine::Position::BELOW) {
+            nearest_lhp_ivrt[iip] = get_face(icurface).get_node_index(ivrt);
+            break;
           }
         }
-        XMOF2D_ASSERT(int_point_ind[1] == -1, "Extra intersection point!");
+
+        if (nearest_lhp_ivrt[0] == nearest_lhp_ivrt[1]) {
+          XMOF2D_ASSERT(std::fabs(vpz(get_node_crd(nearest_lhp_ivrt[1]), int_point, 
+                                      get_node_crd(int_point_ind[0]))) >= 2*epsilon,
+                        "Area of the subcell below the line is smaller than the machine epsilon!");
+        }
+        
         int inew_node = nnodes();
         nodes.push_back(Node(int_point, inew_node, *this));
-        if (int_point_ind[0] == -1)
-          int_point_ind[0] = inew_node;
-        else
-          int_point_ind[1] = inew_node;
+        int_point_ind[iip] = inew_node;
         
         int inewface_cell = -1;
         Point2DLine::Position v0_pos = cur_side[0].PosWRT2Line(n, d2orgn, dist_eps());
@@ -233,7 +188,7 @@ void MiniMesh::Split(int cell_ind, const std::vector<double>& n, double d2orgn, 
       }
         
       default:
-        THROW_EXCEPTION("Infeasible line/convex polygon intersection!");
+        THROW_EXCEPTION("Face lies on the cutting line!");
         break;
     }
   }
