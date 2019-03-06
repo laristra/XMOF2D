@@ -16,15 +16,6 @@ All rights reserved.
 cmake_minimum_required(VERSION 3.0.2)
 set(CMAKE_CTEST_COMMAND ${CMAKE_CTEST_COMMAND})
 
-if ("${CMAKE_PATCH_VERSION}" GREATER 11)
-  cmake_policy(SET CMP0022 NEW)
-endif()
-
-if ("${CMAKE_MAJOR_VERSION}" GREATER 2)
-  cmake_policy(SET CMP0037 OLD)
-  cmake_policy(SET CMP0048 OLD)
-endif()
-
 project (XMOF2D CXX)
 
 set(ARCHOS ${CMAKE_SYSTEM_PROCESSOR}_${CMAKE_SYSTEM_NAME})
