@@ -4,7 +4,7 @@ Please see the license file at the root of this repository, or at:
     https://github.com/laristra/XMOF2D/blob/master/LICENSE
 
 Created by Evgeny Kikinzon.
-Copyright © 2018, Los Alamos National Security, LLC. 
+Copyright © 2018, Triad National Security, LLC. 
 All rights reserved.
 ]]
 
