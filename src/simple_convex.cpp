@@ -190,111 +190,68 @@ std::vector<SimpleConvex> SimpleConvex::SimpleConvexCutByLine(double a2OX, const
   dscal(n_scal, n);
   
   int nsides = nfaces();
+  std::vector<Point2DLine::Position> vrts_pos(nsides);
+  for (int ivrt = 0; ivrt < nsides; ivrt++)
+    vrts_pos[ivrt] = vertex(ivrt).PosWRT2Line(n, d2orgn, dist_eps);
+
   std::vector<Point2D> v_below;
   std::vector<Point2D> v_above;
   int int_point_ind[2] = {-1, -1};
   int nearest_lhp_ivrt[2] = {-1, -1};
 
-  switch (vertex(0).PosWRT2Line(n, d2orgn, dist_eps)) {
-    case Point2DLine::Position::BELOW:
-      v_below.push_back(vertex(0));
-      break;
-    case Point2DLine::Position::ABOVE:
-      v_above.push_back(vertex(0));
-      break;
-    case Point2DLine::Position::ON:
-      v_below.push_back(vertex(0));
-      v_above.push_back(vertex(0));
-      int_point_ind[0] = 0;
-      break;
-  }
   for (int iside = 0; iside < nsides; iside++) {
-    Segment cur_side = Segment(vertex(iside), vertex((iside + 1)%nsides));
-    SegLine::Position side_pos = cur_side.PosWRT2Line(n, d2orgn, dist_eps);
-    switch (side_pos) {
-      case SegLine::Position::BELOW:
-        v_below.push_back(cur_side[1]);
-        break;
-        
-      case SegLine::Position::ABOVE:
-        v_above.push_back(cur_side[1]);
-        break;
-        
-      case SegLine::Position::TOUCHES: {
-        switch (cur_side[1].PosWRT2Line(n, d2orgn, dist_eps)) {
-          case Point2DLine::Position::ON:
-            if (int_point_ind[0] == -1) {
-              int_point_ind[0] = (int) v_below.size();
-              v_below.push_back(cur_side[1]);
-              v_above.push_back(cur_side[1]);
-            }
-            else {
-              if (int_point_ind[1] != -1) {
-                XMOF2D_ASSERT(v_below[0] == cur_side[1], "Extra intersection!");
-              }
-              else {
-                int_point_ind[1] = (int) v_below.size();
-                v_below.push_back(cur_side[1]);
-                v_above.push_back(cur_side[1]);
-              }
-            }
-            break;
-          case Point2DLine::Position::BELOW:
-            v_below.push_back(cur_side[1]);
-            break;
-          case Point2DLine::Position::ABOVE:
-            v_above.push_back(cur_side[1]);
-            break;
+    int iv0 = iside, iv1 = (iside + 1)%nsides;
+    switch(vrts_pos[iv0]) {
+      case Point2DLine::Position::BELOW: 
+        v_below.push_back(vertex(iv0)); break;
+      case Point2DLine::Position::ABOVE: 
+        v_above.push_back(vertex(iv0)); break;
+      case Point2DLine::Position::ON:
+        if (vrts_pos[iv0] == vrts_pos[iv1]) {
+          THROW_EXCEPTION("Side lies on the cutting line!");
         }
-        break;
-      }
-        
-      case SegLine::Position::INTERSECTS: {
-        Point2D int_point = cur_side.LineIntersect(n, d2orgn);
-        XMOF2D_ASSERT(int_point_ind[1] == -1, "Extra intersection!");
-        int iip = (int_point_ind[0] == -1) ? 0 : 1;
-
-        if (area_check_on) {          
-          for (int ivrt = 0; ivrt < 2; ivrt++) {
-            if (cur_side[ivrt].PosWRT2Line(n, d2orgn, dist_eps) == Point2DLine::Position::BELOW) {
-              nearest_lhp_ivrt[iip] = (iside + ivrt)%nsides;
-              break;
-            }
-          }
-
-          if (nearest_lhp_ivrt[0] == nearest_lhp_ivrt[1]) {
-            XMOF2D_ASSERT(std::fabs(vpz(vertex(nearest_lhp_ivrt[1]), int_point, 
-                                        v_below[int_point_ind[0]])) >= 2*epsilon,
-                          "Area of the cutoff is below the machine epsilon!");
-          }
+        else {
+          //Line intersects the side at the first node
+          XMOF2D_ASSERT(int_point_ind[1] == -1, "Extra intersection!");
+          int iip = (int_point_ind[0] == -1) ? 0 : 1;
+          int_point_ind[iip] = (int) v_below.size();
+          v_below.push_back(vertex(iv0));
+          v_above.push_back(vertex(iv0));
+          continue;
         }
-        
-        int_point_ind[iip] = (int) v_below.size();
-        
-        v_below.push_back(int_point);
-        v_above.push_back(int_point);
-        
-        if (cur_side[1].PosWRT2Line(n, d2orgn, dist_eps) == Point2DLine::Position::BELOW)
-          v_below.push_back(cur_side[1]);
-        else
-          v_above.push_back(cur_side[1]);
-        
-        break;
+      default: THROW_EXCEPTION("Unknown point with respect to line position!");
+    }
+
+    //Check if line intersects the side at the second node
+    if (vrts_pos[iv1] == Point2DLine::Position::ON) continue;
+    
+    //Check if line intersects the interior of the side
+    if (vrts_pos[iv0] != vrts_pos[iv1]) {
+      XMOF2D_ASSERT(int_point_ind[1] == -1, "Extra intersection!");
+
+      Segment cur_side = Segment(vertex(iv0), vertex(iv1));
+      Point2D int_point = cur_side.LineIntersect(n, d2orgn);
+      int iip = (int_point_ind[0] == -1) ? 0 : 1;
+
+      if (area_check_on) {          
+        nearest_lhp_ivrt[iip] = 
+          (vrts_pos[iv0] == Point2DLine::Position::BELOW) ? iv0 : iv1;
+
+        if (nearest_lhp_ivrt[0] == nearest_lhp_ivrt[1]) {
+          XMOF2D_ASSERT(std::fabs(vpz(vertex(nearest_lhp_ivrt[1]), int_point, 
+                                      v_below[int_point_ind[0]])) >= 2*epsilon,
+                        "Area of the cutoff is below the machine epsilon!");
+        }
       }
-        
-      default:
-        THROW_EXCEPTION("Side lies on the cutting line!");
-        break;
+      
+      int_point_ind[iip] = (int) v_below.size();
+      v_below.push_back(int_point);
+      v_above.push_back(int_point);
     }
   }
   
-  XMOF2D_ASSERT((int_point_ind[0] != -1) && (int_point_ind[1] != -1), 
-                "Less than two intersection points!");
-  
-  if (v_below[0] == v_below[v_below.size() - 1])
-    v_below.resize(v_below.size() - 1);
-  if (v_above[0] == v_above[v_above.size() - 1])
-    v_above.resize(v_above.size() - 1);
+  XMOF2D_ASSERT(int_point_ind[1] != -1, 
+                "Cutting line does not pass through the interior!");
   
   std::vector<SimpleConvex> SC_cuts(2);
   SC_cuts[0] = SimpleConvex(v_below, ddot_eps);
@@ -368,12 +325,12 @@ double SimpleConvex::compute_cutting_dist(double a2OX, double cut_area,
     std::vector<SimpleConvex> SC_cuts;
     double cur_area;
     try {
-      SC_cuts = SimpleConvexCutByLine(a2OX, d2orgn, ddot_eps, dist_eps, false);
+      SC_cuts = SimpleConvexCutByLine(a2OX, d2orgn, ddot_eps, dist_eps, true);
     }
     catch (Exception e) {
-      if (e.is("Extra intersection!"))
-        SC_cuts = SimpleConvexCutByLine(a2OX, d2orgn, ddot_eps, dist_eps, true);
-      else if (e.is("Side lies on the cutting line!")) {
+      if (e.is("Side lies on the cutting line!") ||
+          e.is("Area of the cutoff is below the machine epsilon!") ||
+          e.is("Cutting line does not pass through the interior!")) {
         //Distance check with the original bounds: 
         //we either sliced off nothing or everything
         cur_area = (std::fabs(d2orgn - dbnd[0]) < std::fabs(d2orgn - dbnd[1])) ? 
