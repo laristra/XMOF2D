@@ -203,7 +203,7 @@ void Cell::InitializeMinimesh() {
   XMOF2D_ASSERT(minimesh == NULL, "Minimesh is already initialized!");
   
   int nextfaces = nfaces();
-  minimesh = new MiniMesh(*this, mesh.div_eps(), mesh.ddot_eps(), mesh.dist_eps());
+  minimesh = new MiniMesh(*this, mesh.ddot_eps(), mesh.dist_eps());
   std::vector<int> first_cell_nodes(nextfaces);
   std::vector<int> first_cell_faces(nextfaces);
   std::iota(first_cell_nodes.begin(), first_cell_nodes.end(), 0);

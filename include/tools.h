@@ -21,11 +21,11 @@ static const double epsilon = std::numeric_limits<double>::epsilon();
 static const double PI = 3.14159265358979;
 
 inline bool is_equal(double x, double y) {
-  return (std::fabs(x - y) <= epsilon) ? true : false;
+  return (std::fabs(x - y) < epsilon) ? true : false;
 }
 
 inline bool is_not_equal(double x, double y) {
-  return (std::fabs(x - y) > epsilon) ? true : false;
+  return (std::fabs(x - y) >= epsilon) ? true : false;
 }
 
 template<typename T>

@@ -47,7 +47,6 @@ int main(int argc, char** argv) {
 
   XMOF2D::IRTolerances ir_tolerances;
   ir_tolerances.dist_eps = 1.0e-14;
-  ir_tolerances.div_eps = 1.0e-6;
   ir_tolerances.ddot_eps = 1.0e-14;
   ir_tolerances.area_eps = 1.0e-14;
   ir_tolerances.ang_eps = 1.0e-13;
@@ -117,7 +116,7 @@ int main(int argc, char** argv) {
       else if (vrts_pos[0] != vrts_pos[1]) {
         should_be_mmc = true;
         
-        XMOF2D::Point2D ref_int = LineLineIntersect(ref_line, side_vrts);
+        XMOF2D::Point2D ref_int = LineLineIntersect(ref_line, side_vrts, deps);
         ref_int_pts.push_back(ref_int);
       }
     }

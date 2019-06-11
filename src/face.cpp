@@ -27,7 +27,8 @@ Face::Face(const std::vector<int>& _nodes, int _face_ind, const MeshBC& _mesh) :
   
   calculate_center();
   calculate_size();
-  XMOF2D_ASSERT(is_not_equal(size_, 0.0), "Trying to create a zero length face!");
+  XMOF2D_ASSERT(is_not_equal(size_, 0.0), "Trying to create a face of length " 
+    << size_ << ", which is below the machine epsilon!");
 }
 
 bool Face::is_boundary() const { return cell1 == -1; }

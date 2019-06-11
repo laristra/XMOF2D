@@ -45,7 +45,7 @@ public:
   std::vector<double> direction() const;
   
   SegLine::Position PosWRT2Line(std::vector<double> n, double d2orgn, double eps = 1.0e-15);
-  Point2D LineIntersect(std::vector<double> n, double d2orgn, double denom_eps = 1.0e-9, double eps = 1.0e-15);
+  Point2D LineIntersect(std::vector<double> n, double d2orgn, double denom_eps = 1.0e-14, double eps = 1.0e-15);
   
   friend std::ostream& operator<<(std::ostream& os, const Segment& s);
 };

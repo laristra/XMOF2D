@@ -15,8 +15,7 @@
 
 namespace XMOF2D {
 
-MiniMesh::MiniMesh(const Cell& base_cell_, double div_eps, double ddot_eps, double dist_eps) : base_cell(base_cell_) {
-  div_eps_ = div_eps;
+MiniMesh::MiniMesh(const Cell& base_cell_, double ddot_eps, double dist_eps) : base_cell(base_cell_) {
   ddot_eps_ = ddot_eps;
   dist_eps_ = dist_eps;
   nodes_shift = Point2D(0.0, 0.0);
@@ -128,7 +127,7 @@ void MiniMesh::Split(int cell_ind, const std::vector<double>& n, double d2orgn, 
       }
         
       case SegLine::Position::INTERSECTS: {
-        Point2D int_point = cur_side.LineIntersect(n, d2orgn);
+        Point2D int_point = cur_side.LineIntersect(n, d2orgn, ddot_eps(), dist_eps());
         XMOF2D_ASSERT(int_point_ind[1] == -1, "Extra intersection!");
         int iip = (int_point_ind[0] == -1) ? 0 : 1;
 

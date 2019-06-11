@@ -230,7 +230,7 @@ std::vector<SimpleConvex> SimpleConvex::SimpleConvexCutByLine(double a2OX, const
       XMOF2D_ASSERT(int_point_ind[1] == -1, "Extra intersection!");
 
       Segment cur_side = Segment(vertex(iv0), vertex(iv1));
-      Point2D int_point = cur_side.LineIntersect(n, d2orgn);
+      Point2D int_point = cur_side.LineIntersect(n, d2orgn, ddot_eps, dist_eps);
       int iip = (int_point_ind[0] == -1) ? 0 : 1;
 
       if (area_check_on) {          

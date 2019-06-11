@@ -13,7 +13,7 @@
 
       integer ivrt, imat, id
       integer nbase_vrts, nmats, max_iter_num
-      real*8  dist_tol, div_tol, ddot_tol, area_tol, ang_tol
+      real*8  dist_tol, ddot_tol, area_tol, ang_tol
       real*8, dimension(12)  :: base_cell_vrts
       integer, dimension(4)  :: mat_ids
       real*8, dimension(4)   :: mat_vfracs
@@ -122,9 +122,6 @@
 
       call xmof2d_get_distance_tolerance(dist_tol)
       print*, "Default distance tolerance: ", dist_tol
-      call xmof2d_get_intersect_division_tolerance(div_tol)
-      print*, "Default division tolerance for lind-line
-     & intersection formula: ", div_tol
       call xmof2d_get_dot_product_tolerance(ddot_tol)
       print*, "Default dot product tolerance: ", ddot_tol
       call xmof2d_get_area_tolerance(area_tol)

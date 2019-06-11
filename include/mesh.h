@@ -28,11 +28,10 @@ struct MeshConfig {
 };
 
 struct IRTolerances {
-  IRTolerances() : dist_eps(1.0e-15), div_eps(1.0e-08), ddot_eps(1.0e-14),
-                   area_eps(1.0e-15), ang_eps(1.0e-14), mof_max_iter(10000) {}
+  IRTolerances() : dist_eps(1.0e-15), ddot_eps(1.0e-14), area_eps(1.0e-15), 
+                   ang_eps(1.0e-14), mof_max_iter(10000) {}
 
   double dist_eps;      //distance tolerance: two points within this distance are considered coincidental
-  double div_eps;       //the min value of denominator before switching to bisections when finding line-segment intersections
   double ddot_eps;      //dot product tolerance: for values below this, vectors are considered to have the same direction
   double area_eps;      //area tolerance for nested disections
   double ang_eps;       //angle tolerance for nested disections
@@ -50,7 +49,6 @@ protected:
   std::vector<int>   cells_material;
   
   double dist_eps_;
-  double div_eps_;
   double ddot_eps_;
   double area_eps_;
   double ang_eps_;
@@ -67,7 +65,6 @@ public:
   int ncells() const { return (int) cells.size(); }
 
   double dist_eps() const { return dist_eps_; }
-  double div_eps() const { return div_eps_; }
   double ddot_eps() const { return ddot_eps_; }
   double area_eps() const { return area_eps_; }
   double ang_eps() const { return ang_eps_; }
@@ -106,7 +103,7 @@ private:
   void Split(int cell_ind, const std::vector<double>& n, double d2orgn, int cell_mat);
   void ConstructMinimesh(const std::vector<double>& a2OX, const std::vector<double>& d2orgn, const std::vector<int>& cells_mat);  
 public:
-  MiniMesh(const Cell& base_cell_, double div_eps, double ddot_eps, double dist_eps);
+  MiniMesh(const Cell& base_cell_, double ddot_eps, double dist_eps);
   const Cell& get_base_cell() const { return base_cell; }
   const MeshBC& get_parent_mesh() const;
 

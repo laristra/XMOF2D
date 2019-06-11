@@ -23,7 +23,7 @@ void XMOF_Reconstructor::set_materials_data(const CellsMatData& mat_data) {
       double cmat_vol = mat_data.cells_vfracs[icell][icmat]*mesh.get_cell(icell).size();
       XMOF2D_ASSERT(cmat_vol > mesh.area_eps(), "Given area for material " << 
         mat_data.cells_materials[icell][icmat] << " in cell " << icell <<
-        " is " << cmat_vol << ", which is below the area tolerance of " << mesh.area_eps());
+        " is " << cmat_vol << ", which should be above the area tolerance of " << mesh.area_eps());
     }
   }
 

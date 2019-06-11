@@ -34,18 +34,6 @@ void xmof2d_get_distance_tolerance(double* dist_eps) {
   *dist_eps = xmof2d_tol.dist_eps;
 }
 
-void xmof2d_set_intersect_division_tolerance(double div_eps) {
-  if (div_eps <= 0.0) {
-    fprintf(stderr, "%s", "\nDivision tolerance should be positive!\n");
-    exit(EXIT_FAILURE);
-  }
-  xmof2d_tol.div_eps = div_eps;
-}
-
-void xmof2d_get_intersect_division_tolerance(double* div_eps) {
-  *div_eps =  xmof2d_tol.div_eps;
-}
-
 void xmof2d_set_dot_product_tolerance(double ddot_eps) {
   if (ddot_eps <= 0.0) {
     fprintf(stderr, "%s", "\nDot product tolerance should be positive!\n");

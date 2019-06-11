@@ -121,13 +121,10 @@ int main(int argc, char** argv) {
   delete [] vrt_crds;
   delete [] mat_centroids;
   
-  double dist_tol, div_tol, ddot_tol, area_tol, ang_tol;
+  double dist_tol, ddot_tol, area_tol, ang_tol;
   int max_iter_num;
   xmof2d_get_distance_tolerance(&dist_tol);
   std::cout << "Default distance tolerance: " << dist_tol << std::endl;
-  xmof2d_get_intersect_division_tolerance(&div_tol);
-  std::cout << "Default division tolerance for line-line intersection formula: "
-            << div_tol << std::endl;
   xmof2d_get_dot_product_tolerance(&ddot_tol);
   std::cout << "Default dot product tolerance: " << ddot_tol << std::endl;
   xmof2d_get_area_tolerance(&area_tol);
