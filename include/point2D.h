@@ -54,10 +54,17 @@ std::ostream& operator<<(std::ostream& os, const Point2D& p);
 double distance(const Point2D& p1, const Point2D& p2);
 
 double vpz(const Point2D& a, const Point2D& b, const Point2D& c);
-bool is_cw(const Point2D& a, const Point2D& b, const Point2D& c, double ddot_eps = 1.0e-14);
-bool is_ccw(const Point2D& a, const Point2D& b, const Point2D& c, double ddot_eps = 1.0e-14);
-bool is_ccw(const std::vector<Point2D>& p, double ddot_eps = 1.0e-14);
-bool on_same_line(const Point2D& a, const Point2D& b, const Point2D& c, double ddot_eps = 1.0e-14);
+int vpsign(const Point2D& a, const Point2D& b, const Point2D& c, 
+           double dist_eps = 1.0e-15, double ddot_eps = 1.0e-14);
+int dpsign(const Point2D& a, const Point2D& b, const Point2D& c, 
+           double dist_eps = 1.0e-15, double ddot_eps = 1.0e-14);
+bool is_cw(const Point2D& a, const Point2D& b, const Point2D& c, 
+           double dist_eps = 1.0e-15, double ddot_eps = 1.0e-14);
+bool is_ccw(const Point2D& a, const Point2D& b, const Point2D& c, 
+            double dist_eps = 1.0e-15, double ddot_eps = 1.0e-14);
+bool is_ccw(const std::vector<Point2D>& p, double dist_eps = 1.0e-15, double ddot_eps = 1.0e-14);
+bool on_same_line(const Point2D& a, const Point2D& b, const Point2D& c, 
+                  double dist_eps = 1.0e-15, double ddot_eps = 1.0e-14);
 
 Point2D LineLineIntersect(const std::vector<Point2D>& l1p, const std::vector<Point2D>& l2p, double eps = 1e-15);
 

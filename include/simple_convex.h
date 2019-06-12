@@ -20,7 +20,7 @@ protected:
   std::vector<Point2D> v;
   Point2D              shift;
   
-  bool vrts_are_ccw(double ddot_eps = 1.0e-14);
+  bool vrts_are_ccw(double dist_eps = 1.0e-15, double ddot_eps = 1.0e-14);
 
 public:
   SimpleConvex();
@@ -39,7 +39,7 @@ public:
   void translate2origin();
   void translate2orig_pos();
   bool is_boundary(const Point2D& p, double eps = 1.0e-15) const;
-  bool is_interior(const Point2D& p, double ddot_eps = 1.0e-14) const;
+  bool is_interior(const Point2D& p, double dist_eps = 1.0e-15, double ddot_eps = 1.0e-14) const;
   std::vector<SimpleConvex> SimpleConvexCutByLine(double a2OX, double d2orgn,
                                                   double ddot_eps, double dist_eps,
                                                   bool ipts_check_on);

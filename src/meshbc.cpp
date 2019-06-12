@@ -90,33 +90,33 @@ void MeshBC::set_nodes_icells() {
 std::vector<int> MeshBC::get_bad_cells() const {
   std::vector<int> ibadcells;
   for (int icell = 0; icell < ncells(); icell++) {
-    if (!is_ccw(get_cell(icell).get_nodes(), ddot_eps()))
+    if (!is_ccw(get_cell(icell).get_nodes()))
       ibadcells.push_back(icell);
   }
   
   return ibadcells;
 }
 
-bool MeshBC::is_ccw(const std::vector<int> inodes, double ddot_eps) const {
+bool MeshBC::is_ccw(const std::vector<int> inodes) const {
   int np = (int) inodes.size();
   XMOF2D_ASSERT(np > 2, "Sequence should contain at least three nodes");
   
   for (int i = 0; i < np; i++)  {
     if (!XMOF2D::is_ccw(nodes[inodes[i]].get_crd(), nodes[inodes[(i + 1)%np]].get_crd(),
-                        nodes[inodes[(i + 2)%np]].get_crd(), ddot_eps))
+                        nodes[inodes[(i + 2)%np]].get_crd(), dist_eps(), ddot_eps()))
       return false;
   }
   
   return true;
 }
   
-bool MeshBC::on_same_line(const std::vector<int> inodes, double ddot_eps) const {
+bool MeshBC::on_same_line(const std::vector<int> inodes) const {
   int np = (int) inodes.size();
   XMOF2D_ASSERT(np > 2, "Sequence should contain at least three nodes");
   
   for (int i = 0; i < np - 2; i++)  {
     if (!XMOF2D::on_same_line(nodes[inodes[0]].get_crd(), nodes[inodes[i + 1]].get_crd(),
-                              nodes[inodes[i + 2]].get_crd(), ddot_eps))
+                              nodes[inodes[i + 2]].get_crd(), dist_eps(), ddot_eps()))
       return false;
   }
   
@@ -190,7 +190,7 @@ std::pair< std::vector<int>, std::vector<bool> > MeshBC::get_ccw_faces_ordering(
   std::vector<int> inode_redseq = {inode_seq[0]};
   for (int iside = 0; iside < nsides - 1; iside++) {
     std::vector<int> inodes_2sides = {inode_seq[iside], inode_seq[iside + 1], inode_seq[iside + 2]};
-    if (on_same_line(inodes_2sides, ddot_eps()))
+    if (on_same_line(inodes_2sides))
       orig2red[iside + 1] = orig2red[iside];
     else {
       orig2red[iside + 1] = (int) inode_redseq.size();

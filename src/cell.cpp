@@ -132,13 +132,15 @@ void Cell::calculate_center() {
 void Cell::nodes_from_faces_geo() {
   nodes.clear();
   
-  if (is_ccw(center(), get_face(0).get_node_crd(0), get_face(0).get_node_crd(1), mesh.ddot_eps()))
+  if (is_ccw(center(), get_face(0).get_node_crd(0), get_face(0).get_node_crd(1), 
+             mesh.dist_eps(), mesh.ddot_eps()))
     nodes.push_back(get_face(0).get_node_index(0));
   else
     nodes.push_back(get_face(0).get_node_index(1));
   
   for (int iside = 0; iside < nfaces() - 1; iside++) {
-    if (is_ccw(center(), get_face(iside).get_node_crd(0), get_face(iside).get_node_crd(1), mesh.ddot_eps()))
+    if (is_ccw(center(), get_face(iside).get_node_crd(0), get_face(iside).get_node_crd(1), 
+        mesh.dist_eps(), mesh.ddot_eps()))
       nodes.push_back(get_face(iside).get_node_index(1));
     else
       nodes.push_back(get_face(iside).get_node_index(0));

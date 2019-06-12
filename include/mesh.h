@@ -81,8 +81,8 @@ public:
   void set_node_crd(int inode, const Point2D& crd);
   std::vector<int> get_bad_cells() const;
   
-  bool is_ccw(const std::vector<int> inodes, double ddot_eps = 1.0e-14) const;
-  bool on_same_line(const std::vector<int> inodes, double ddot_eps = 1.0e-14) const;
+  bool is_ccw(const std::vector<int> inodes) const;
+  bool on_same_line(const std::vector<int> inodes) const;
   std::pair< std::vector<int>, std::vector<bool> > get_ccw_faces_ordering(
     const std::vector<int>& ifaces);
   

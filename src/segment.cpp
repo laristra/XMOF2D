@@ -164,20 +164,20 @@ std::vector<int> isame_vrt(const Segment& a, const Segment& b) {
   return isamev;
 }
 
-bool is_ccw(const Segment& a, const Segment& b, double ddot_eps) {
+bool is_ccw(const Segment& a, const Segment& b, double dist_eps, double ddot_eps) {
   std::vector<int> isamev = isame_vrt(a, b);
   if (isamev[0] == -1)
     return false;
   std::vector<Point2D> p = { a[(isamev[0] + 1)%2], a[isamev[0]], b[(isamev[1] + 1)%2] };
-  return is_ccw(p[0], p[1], p[2], ddot_eps);
+  return is_ccw(p[0], p[1], p[2], dist_eps, ddot_eps);
 }
 
-bool is_ccw(const std::vector<Segment>& segs, double ddot_eps) {
+bool is_ccw(const std::vector<Segment>& segs, double dist_eps, double ddot_eps) {
   int nseg = (int) segs.size();
   XMOF2D_ASSERT(nseg > 1, "Sequence should contain at least two segments");
   
   for (int i = 0; i < nseg - 1; i++)  {
-    if (!is_ccw(segs[i], segs[i + 1], ddot_eps))
+    if (!is_ccw(segs[i], segs[i + 1], dist_eps, ddot_eps))
       return false;
   }
   

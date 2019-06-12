@@ -204,15 +204,15 @@ void MiniMesh::Split(int cell_ind, const std::vector<double>& n, double d2orgn, 
           if (get_face(cells_faces[ic][icf]).get_node_index(ifn) == int_point_ind[iipt])
             iendfaces[ic][iipt] = icf;
       if ((iendfaces[ic][0] != -1) && (iendfaces[ic][1] != -1))
-      break;
+        break;
     }
   }
   for (int ic = 0; ic < 2; ic++) {
     int ncfaces = (int) cells_faces[ic].size();
     if (ncfaces == 2) {
       if (!XMOF2D::is_ccw(get_face(cells_faces[ic][0]).as_segment(),
-                          get_face(cells_faces[ic][1]).as_segment(), ddot_eps()))
-      std::rotate(cells_faces[ic].begin(), cells_faces[ic].begin() + 1, cells_faces[ic].end());
+                          get_face(cells_faces[ic][1]).as_segment(), dist_eps(), ddot_eps()))
+        std::rotate(cells_faces[ic].begin(), cells_faces[ic].begin() + 1, cells_faces[ic].end());
       
       continue;
     }

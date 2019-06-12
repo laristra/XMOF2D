@@ -50,8 +50,8 @@ public:
   friend std::ostream& operator<<(std::ostream& os, const Segment& s);
 };
 
-bool is_ccw(const Segment& a, const Segment& b, double ddot_eps = 1.0e-14);
-bool is_ccw(const std::vector<Segment>& segs, double ddot_eps = 1.0e-14);
+bool is_ccw(const Segment& a, const Segment& b, double dist_eps = 1.0e-15, double ddot_eps = 1.0e-14);
+bool is_ccw(const std::vector<Segment>& segs, double dist_eps = 1.0e-15, double ddot_eps = 1.0e-14);
 std::vector<int> isame_vrt(const Segment& a, const Segment& b);
 
 }

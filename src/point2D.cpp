@@ -92,30 +92,64 @@ double vpz(const Point2D& a, const Point2D& b, const Point2D& c)
   return ( (b.x - a.x)*(c.y - a.y) - (c.x -  a.x)*(b.y - a.y) );
 }
 
-bool is_cw(const Point2D& a, const Point2D& b, const Point2D& c, double ddot_eps) {
-  double pts_vpz = vpz(a, b, c);
-  
-  return (pts_vpz < ddot_eps);
+int vpsign(const Point2D& a, const Point2D& b, const Point2D& c, 
+           double dist_eps, double ddot_eps)
+{
+  std::vector<double> vec[2] = {b - a, c - a};
+  for (int iv = 0; iv < 2; iv++) {
+    double vsize = dnrm2(vec[iv]);
+    XMOF2D_ASSERT(vsize >= dist_eps, 
+      "When computing the sign of a cross product, one of the vectors is of length " <<
+      vsize << ", which is below the distance tolerance of " << dist_eps);
+    dscal(1.0/vsize, vec[iv]);
+  }
+
+  double cpz = vec[0][0]*vec[1][1] - vec[1][0]*vec[0][1];
+
+  if (std::fabs(cpz) < ddot_eps) return 0;
+  else return (std::signbit(cpz)) ? -1 : 1;
 }
 
-bool on_same_line(const Point2D& a, const Point2D& b, const Point2D& c, double ddot_eps) {
-  double pts_vpz = vpz(a, b, c);
-  
-  return (std::fabs(pts_vpz) < ddot_eps);
-}
-  
-bool is_ccw(const Point2D& a, const Point2D& b, const Point2D& c, double ddot_eps) {
-  double pts_vpz = vpz(a, b, c);
-  
-  return (pts_vpz > -ddot_eps);
+int dpsign(const Point2D& a, const Point2D& b, const Point2D& c, 
+           double dist_eps, double ddot_eps)
+{
+  std::vector<double> vec[2] = {b - a, c - a};
+  for (int iv = 0; iv < 2; iv++) {
+    double vsize = dnrm2(vec[iv]);
+    XMOF2D_ASSERT(vsize >= dist_eps, 
+      "When computing the sign of a cross product, one of the vectors is of length " <<
+      vsize << ", which is below the distance tolerance of " << dist_eps);
+    dscal(1.0/vsize, vec[iv]);
+  }
+
+  double dp = vec[0][0]*vec[1][0] + vec[0][1]*vec[1][1];
+
+  if (std::fabs(dp) < ddot_eps) return 0;
+  else return (std::signbit(dp)) ? -1 : 1;
 }
 
-bool is_ccw(const std::vector<Point2D>& p, double ddot_eps) {
+bool is_cw(const Point2D& a, const Point2D& b, const Point2D& c, double dist_eps, double ddot_eps) {
+  int vp_sign = vpsign(a, b, c, dist_eps, ddot_eps);
+  if (vp_sign != 0) return (vp_sign < 0);
+  else return (dpsign(a, b, c, dist_eps, ddot_eps));
+}
+
+bool on_same_line(const Point2D& a, const Point2D& b, const Point2D& c, double dist_eps, double ddot_eps) {
+  return (vpsign(a, b, c, dist_eps, ddot_eps) == 0);
+}
+  
+bool is_ccw(const Point2D& a, const Point2D& b, const Point2D& c, double dist_eps, double ddot_eps) {
+  int vp_sign = vpsign(a, b, c, dist_eps, ddot_eps);
+  if (vp_sign != 0) return (vp_sign > 0);
+  else return (dpsign(a, b, c, dist_eps, ddot_eps));
+}
+
+bool is_ccw(const std::vector<Point2D>& p, double dist_eps, double ddot_eps) {
   int np = (int) p.size();
   XMOF2D_ASSERT(np > 2, "Sequence should contain at least three points");
   
   for (int i = 0; i < np; i++)  {
-    if (!is_ccw(p[i], p[(i + 1)%np], p[(i + 2)%np], ddot_eps))
+    if (!is_ccw(p[i], p[(i + 1)%np], p[(i + 2)%np], dist_eps, ddot_eps))
       return false;
   }
   
@@ -126,16 +160,15 @@ Point2DLine::Position Point2D::PosWRT2Line(std::vector<double> n, double d2orgn,
   std::vector<double> v2l = vec();
   daxpy(-d2orgn, n, v2l);
   double lv = ddot(v2l, n);
-  
-  
+    
   Point2DLine::Position pos;
   if (std::fabs(lv) < eps)
-  pos = Point2DLine::Position::ON;
-  else {
-    if (std::signbit(lv))
-    pos = Point2DLine::Position::BELOW;
-    else
-    pos = Point2DLine::Position::ABOVE;
+    pos = Point2DLine::Position::ON;
+    else {
+      if (std::signbit(lv))
+        pos = Point2DLine::Position::BELOW;
+      else
+        pos = Point2DLine::Position::ABOVE;
   }
   
   return pos;

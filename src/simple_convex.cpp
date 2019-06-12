@@ -37,8 +37,8 @@ SimpleConvex::SimpleConvex(const std::vector<Point2D>& p, double ddot_eps) {
   XMOF2D_ASSERT(vrts_are_ccw(ddot_eps), "Tried to construct a non-convex polygon!");
 }
 
-bool SimpleConvex::vrts_are_ccw(double ddot_eps) {
-  return is_ccw(v, ddot_eps);
+bool SimpleConvex::vrts_are_ccw(double dist_eps, double ddot_eps) {
+  return is_ccw(v, dist_eps, ddot_eps);
 }
 
 Point2D SimpleConvex::vertex(int i) const {
@@ -160,19 +160,19 @@ bool SimpleConvex::is_boundary(const Point2D& p, double eps) const {
   return false;
 }
 
-bool SimpleConvex::is_interior(const Point2D& p, double ddot_eps) const {
+bool SimpleConvex::is_interior(const Point2D& p, double dist_eps, double ddot_eps) const {
   int wn = 0;
   int nnodes = nfaces();
   for (int inode = 0; inode < nnodes; inode++) {
     int inextnode = (inode + 1)%nnodes;
     if (v[inode].y <= p.y) {
       if (v[inextnode].y  > p.y)
-        if (is_ccw(v[inode], v[inextnode], p, ddot_eps))
+        if (is_ccw(v[inode], v[inextnode], p, dist_eps, ddot_eps))
           ++wn;
     }
     else {
       if (v[inextnode].y <= p.y)
-        if (is_cw(v[inode], v[inextnode], p, ddot_eps))
+        if (is_cw(v[inode], v[inextnode], p, dist_eps, ddot_eps))
           --wn;
     }
   }
