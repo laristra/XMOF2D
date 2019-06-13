@@ -31,10 +31,10 @@ SimpleConvex::SimpleConvex() {
   shift = BAD_POINT;
 }
 
-SimpleConvex::SimpleConvex(const std::vector<Point2D>& p, double ddot_eps) {
+SimpleConvex::SimpleConvex(const std::vector<Point2D>& p, double dist_eps, double ddot_eps) {
   v = p;
   shift = Point2D(0.0, 0.0);
-  XMOF2D_ASSERT(vrts_are_ccw(ddot_eps), "Tried to construct a non-convex polygon!");
+  XMOF2D_ASSERT(vrts_are_ccw(dist_eps, ddot_eps), "Tried to construct a non-convex polygon!");
 }
 
 bool SimpleConvex::vrts_are_ccw(double dist_eps, double ddot_eps) {
@@ -115,8 +115,8 @@ bool SimpleConvex::contains(const SimpleConvex& sc, double eps) const {
   return true;
 }
 
-double SimpleConvex::dist(const Point2D& p) const {
-  if (contains(p))
+double SimpleConvex::dist(const Point2D& p, double area_eps, double dist_eps) const {
+  if (contains(p, area_eps))
     return 0.0;
   
   const int n = nfaces();
@@ -254,8 +254,8 @@ std::vector<SimpleConvex> SimpleConvex::SimpleConvexCutByLine(double a2OX, const
                 "Cutting line does not pass through the interior!");
   
   std::vector<SimpleConvex> SC_cuts(2);
-  SC_cuts[0] = SimpleConvex(v_below, ddot_eps);
-  SC_cuts[1] = SimpleConvex(v_above, ddot_eps);
+  SC_cuts[0] = SimpleConvex(v_below, dist_eps, ddot_eps);
+  SC_cuts[1] = SimpleConvex(v_above, dist_eps, ddot_eps);
   
   return SC_cuts;
 }
@@ -485,7 +485,9 @@ double SimpleConvex::compute_optimal_angle(double cut_area, Point2D ref_centroid
   return 0.5*(a_guess[0] + a_guess[2]);
 }
 
-void SimpleConvex::compute_optimal_cuts(const std::vector<double>& cut_vol_fracs, const std::vector<Point2D>& ref_centroids, double ang_eps, double area_eps, double ddot_eps, double dist_eps, int max_iter, std::vector<int>& opt_mat_order, std::vector<double>& opt_a2OX, std::vector<double>& opt_d2orgn) {
+void SimpleConvex::compute_optimal_cuts(const std::vector<double>& cut_vol_fracs, const std::vector<Point2D>& ref_centroids, 
+                                        double ang_eps, double area_eps, double ddot_eps, double dist_eps, int max_iter, 
+                                        std::vector<int>& opt_mat_order, std::vector<double>& opt_a2OX, std::vector<double>& opt_d2orgn) {
   translate2origin();
   
   int nmat = (int) cut_vol_fracs.size();
@@ -497,7 +499,7 @@ void SimpleConvex::compute_optimal_cuts(const std::vector<double>& cut_vol_fracs
   std::vector<double> cur_d2orgn(nmat - 1);
   do {
     double aggr_err = 0.0;
-    SimpleConvex cur_SC = SimpleConvex(vertices());
+    SimpleConvex cur_SC = SimpleConvex(vertices(), dist_eps, ddot_eps);
     for(int imat = 0; imat < nmat - 1; imat++) {
       int cur_mat = cur_mat_order[imat];
       double cut_area = cut_vol_fracs[cur_mat] * size();

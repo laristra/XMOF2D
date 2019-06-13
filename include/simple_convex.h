@@ -20,11 +20,11 @@ protected:
   std::vector<Point2D> v;
   Point2D              shift;
   
-  bool vrts_are_ccw(double dist_eps = 1.0e-15, double ddot_eps = 1.0e-14);
+  bool vrts_are_ccw(double dist_eps, double ddot_eps);
 
 public:
   SimpleConvex();
-  SimpleConvex(const std::vector<Point2D>& v, double ddot_eps = 1.0e-14);
+  SimpleConvex(const std::vector<Point2D>& v, double dist_eps, double ddot_eps);
   
   Point2D                     	vertex(int i) const;
   const std::vector<Point2D>&	vertices() const;
@@ -32,14 +32,14 @@ public:
   std::unique_ptr<GObject1D>  	face(int i) const;
   int                       	nfaces() const;
   virtual double            	size() const;
-  virtual bool              	contains(const Point2D& p, double eps = 1.0e-14) const;
-  bool                      	contains(const SimpleConvex& sc, double eps = 1.0e-14) const;
-  double                    	dist(const Point2D& p) const;
+  virtual bool              	contains(const Point2D& p, double eps) const;
+  bool                      	contains(const SimpleConvex& sc, double eps) const;
+  double                    	dist(const Point2D& p, double area_eps, double dist_eps) const;
   
   void translate2origin();
   void translate2orig_pos();
-  bool is_boundary(const Point2D& p, double eps = 1.0e-15) const;
-  bool is_interior(const Point2D& p, double dist_eps = 1.0e-15, double ddot_eps = 1.0e-14) const;
+  bool is_boundary(const Point2D& p, double eps) const;
+  bool is_interior(const Point2D& p, double dist_eps, double ddot_eps) const;
   std::vector<SimpleConvex> SimpleConvexCutByLine(double a2OX, double d2orgn,
                                                   double ddot_eps, double dist_eps,
                                                   bool ipts_check_on);

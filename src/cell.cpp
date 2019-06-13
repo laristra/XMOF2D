@@ -118,7 +118,7 @@ SimpleConvex Cell::as_simpleconvex() const {
   for (int inode = 0; inode < nfaces(); inode++)
     scv[inode] = get_node_crd(inode);
   
-  return SimpleConvex(scv, mesh.ddot_eps());
+  return SimpleConvex(scv, mesh.dist_eps(), mesh.ddot_eps());
 }
 
 void Cell::calculate_size() {
