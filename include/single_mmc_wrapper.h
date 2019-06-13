@@ -32,7 +32,7 @@ void xmof2d_set_mmc_vertices(int nvrts, double* crds);
 void xmof2d_set_materials_data(int nmaterials, int* mat_ids, double* vol_fractions, double* centroids);
 void xmof2d_initialize_reconstructor();
 void xmof2d_free_reconstructor();
-void xmof2d_perform_reconstruction();
+void xmof2d_perform_reconstruction(bool* succeeded);
 void xmof2d_mesh_get_ncells(int* ncells);
 void xmof2d_mesh_get_nfaces(int* nfaces);
 void xmof2d_mesh_get_nnodes(int* nnodes);

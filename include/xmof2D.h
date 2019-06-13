@@ -44,7 +44,7 @@ public:
   void set_materials_data(const CellsMatData& mat_data);
   void set_global_ind(const GlobalIndData& global_ind_data);
   
-  void construct_minimesh(int icell);
+  int construct_minimesh(int icell);
   
   const std::vector<int>& get_cell_materials(int icell) const;
   const std::vector<double>& get_cell_vfracs(int icell) const;

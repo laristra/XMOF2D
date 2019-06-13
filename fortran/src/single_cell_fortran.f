@@ -26,7 +26,7 @@
       integer node_ncells, node_nfaces 
       integer iparent_node, node_nparent_faces
       real*8  cell_area, cen_diff, face_length
-      logical*1 is_boundary
+      logical*1 rec_success, is_boundary
       real*8, dimension(1:2) :: cell_center, face_center
       real*8, dimension(1:2) :: node_crd
       integer, dimension (:), allocatable :: cell_ifaces
@@ -138,7 +138,11 @@
       print*, "Creating a reconstructor instance..."
       call xmof2d_initialize_reconstructor()
       print*, "Constructing a minimesh..."
-      call xmof2d_perform_reconstruction()
+      call xmof2d_perform_reconstruction(rec_success)
+      if (.not.rec_success) then
+        print*, "Reconstruction has failed, exiting..."
+        error stop
+      endif      
       print*, "****************************************"
 
       call xmof2d_mesh_get_ncells(ncells)

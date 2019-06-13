@@ -109,38 +109,42 @@ Point2D Segment::LineIntersect(std::vector<double> n, double d2orgn, double deno
          "Segment is above, below, or on the line!");
   
   Point2D pint = BAD_POINT;
-  if (pos == SegLine::Position::TOUCHES) {
-    double lv[2];
-    for (int inode = 0; inode < 2; inode++) {
-      std::vector<double> v2l = v[inode].vec();
-      daxpy(-d2orgn, n, v2l);
-      lv[inode] = ddot(v2l, n);
-    }
-    pint = (std::fabs(lv[0]) < eps) ? v[0] : v[1];
-  }
+  if (pos == SegLine::Position::TOUCHES)
+    pint = (v[0].PosWRT2Line(n, d2orgn, eps) == Point2DLine::ON) ? v[0] : v[1];
   else {
     std::vector<double> sdv = v[1] - v[0];
     double cpz = std::fabs(ddot(sdv, n));
     
-    if(std::fabs(cpz) > denom_eps) {
+    bool use_bisections = false;
+    if(std::fabs(cpz) < denom_eps)
+      use_bisections = true;
+    else {
+      double t_eps = eps/dnrm2(sdv);
       double t = std::fabs(-d2orgn + ddot(v[0].vec(), n)) / cpz;
       XMOF2D_ASSERT((t > 0.0) && (t < 1.0), "Intersection point should belong to the interior!");
-      dscal(t, sdv);
-      pint = v[0] + sdv;
+      if (t < t_eps) 
+        use_bisections = true;
+      else {
+        dscal(t, sdv);
+        pint = v[0] + sdv;
+      }
     }
-    else {
+
+    if (use_bisections) {
       Segment bisected_seg = *this;
-      SegLine::Position bs_pos = SegLine::Position::INTERSECTS;
+      bool int_pt_inside = true;
       do {
         Segment test_seg = Segment(bisected_seg[0], bisected_seg.middle());
         SegLine::Position cur_pos = test_seg.PosWRT2Line(n, d2orgn, eps);
         if ((cur_pos == SegLine::Position::BELOW) || (cur_pos == SegLine::Position::ABOVE))
           bisected_seg = Segment(bisected_seg.middle(), bisected_seg[1]);
-        else
+        else {
           bisected_seg = test_seg;
-        bs_pos = bisected_seg.PosWRT2Line(n, d2orgn, eps);
-      } while (bs_pos == SegLine::Position::INTERSECTS);
-      pint = bisected_seg.LineIntersect(n, d2orgn, denom_eps, eps);
+          if (cur_pos == SegLine::Position::TOUCHES)
+            int_pt_inside = false;
+        }
+      } while (int_pt_inside);
+      pint = bisected_seg[1];
     }
   }
   

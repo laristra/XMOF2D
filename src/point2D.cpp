@@ -98,9 +98,6 @@ int vpsign(const Point2D& a, const Point2D& b, const Point2D& c,
   std::vector<double> vec[2] = {b - a, c - a};
   for (int iv = 0; iv < 2; iv++) {
     double vsize = dnrm2(vec[iv]);
-    if (vsize < dist_eps) {
-      std::cout << "Stop!" << std::endl;
-    }
     XMOF2D_ASSERT(vsize >= dist_eps, 
       "When computing the sign of a cross product, one of the vectors is of length " <<
       vsize << ", which is below the distance tolerance of " << dist_eps);

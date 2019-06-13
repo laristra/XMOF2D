@@ -48,8 +48,18 @@ const std::vector<Point2D>& XMOF_Reconstructor::get_cell_centroids(int icell) co
   return cells_centroids[icell];
 }
 
-void XMOF_Reconstructor::construct_minimesh(int icell) {
-  mesh.ConstructMinimesh(icell, cells_materials[icell], cells_vfracs[icell], cells_centroids[icell]);
+int XMOF_Reconstructor::construct_minimesh(int icell) {
+  try {
+    mesh.ConstructMinimesh(icell, cells_materials[icell], cells_vfracs[icell], cells_centroids[icell]);
+  }
+  catch (Exception e) {
+    std::cerr << "Interface reconstruction for cell " << icell << 
+      " has failed with the following message" << std::endl <<
+      e.what() << std::endl;
+    return 1;
+  } 
+
+  return 0;
 }
 
 int XMOF_Reconstructor::cell_global_ind(int icell) const { 

@@ -141,7 +141,11 @@ int main(int argc, char** argv) {
   std::cout << "Creating a reconstructor instance..." << std::endl;
   xmof2d_initialize_reconstructor();
   std::cout << "Constructing a minimesh..." << std::endl;
-  xmof2d_perform_reconstruction();
+  bool rec_success;
+  xmof2d_perform_reconstruction(&rec_success);
+  if (!rec_success) {
+    throw XMOF2D::Exception("Reconstruction has failed, exiting...");
+  }
   std::cout << "****************************************" << std::endl;
   
   int ncells, nfaces, nnodes;

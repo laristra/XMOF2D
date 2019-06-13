@@ -96,8 +96,10 @@
           USE, INTRINSIC :: ISO_C_BINDING
         END SUBROUTINE xmof2d_free_reconstructor
 
-        SUBROUTINE xmof2d_perform_reconstruction() BIND(C)
+        SUBROUTINE xmof2d_perform_reconstruction(succeeded) BIND(C)
           USE, INTRINSIC :: ISO_C_BINDING
+          IMPLICIT NONE
+          LOGICAL(KIND=C_BOOL), INTENT(OUT) :: succeeded          
         END SUBROUTINE xmof2d_perform_reconstruction
 
         SUBROUTINE xmof2d_mesh_get_ncells(ncells) BIND(C)

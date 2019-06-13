@@ -139,12 +139,16 @@ void xmof2d_free_reconstructor() {
   xmof2d_rec = nullptr;
 }
 
-void xmof2d_perform_reconstruction() {
+void xmof2d_perform_reconstruction(bool* succeeded) {
   if (xmof2d_rec->get_cell_materials(0).empty()) {
     fprintf(stderr, "%s", "\nMaterials data should be set first!\n");
-    exit(EXIT_FAILURE);
+    *succeeded = false;
+    return;
   }
-  xmof2d_rec->construct_minimesh(0);
+  if(xmof2d_rec->construct_minimesh(0) != 0) {
+    *succeeded = false;
+    return;
+  }
 
   const XMOF2D::MiniMesh& minimesh = xmof2d_rec->get_base_mesh().get_cell(0).get_minimesh();
   int ncells = minimesh.ncells();
@@ -152,6 +156,9 @@ void xmof2d_perform_reconstruction() {
   icell_orig2minimesh.resize(ncells);
   for (int immc = 0; immc < ncells; immc++)
     icell_orig2minimesh[minimesh.get_orig_icells()[immc]] = immc;
+
+  *succeeded = true;
+  return;
 }
 
 void xmof2d_mesh_get_ncells(int* ncells) {
