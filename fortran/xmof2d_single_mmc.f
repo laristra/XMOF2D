@@ -23,18 +23,6 @@
           REAL(KIND=C_DOUBLE), INTENT(OUT) :: dist_eps
         END SUBROUTINE xmof2d_get_distance_tolerance
 
-        SUBROUTINE xmof2d_set_dot_product_tolerance(ddot_eps) BIND(C)
-          USE, INTRINSIC :: ISO_C_BINDING
-          IMPLICIT NONE
-          REAL(KIND=C_DOUBLE), VALUE, INTENT(IN) :: ddot_eps
-        END SUBROUTINE xmof2d_set_dot_product_tolerance
-
-        SUBROUTINE xmof2d_get_dot_product_tolerance(ddot_eps) BIND(C)
-          USE, INTRINSIC :: ISO_C_BINDING
-          IMPLICIT NONE
-          REAL(KIND=C_DOUBLE), INTENT(OUT) :: ddot_eps
-        END SUBROUTINE xmof2d_get_dot_product_tolerance
-
         SUBROUTINE xmof2d_set_area_tolerance(area_eps) BIND(C)
           USE, INTRINSIC :: ISO_C_BINDING
           IMPLICIT NONE
