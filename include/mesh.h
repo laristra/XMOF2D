@@ -28,14 +28,13 @@ struct MeshConfig {
 };
 
 struct IRTolerances {
-  IRTolerances() : dist_eps(1.0e-15), ddot_eps(1.0e-14), area_eps(1.0e-15), 
+  IRTolerances() : dist_eps(1.0e-15), area_eps(1.0e-15), 
                    ang_eps(1.0e-14), mof_max_iter(10000) {}
 
   double dist_eps;      //distance tolerance: two points within this distance are considered coincidental
-  double ddot_eps;      //dot product tolerance: for values below this, vectors are considered to have the same direction
-  double area_eps;      //area tolerance for nested disections
-  double ang_eps;       //angle tolerance for nested disections
-  int    mof_max_iter;  //maximum number of iterations when finding the optimal distance or the optimal angle in nested disections
+  double area_eps;      //area tolerance: discrepancy in area below this value is considered to be zero
+  double ang_eps;       //angle tolerance for the MOF minimization procedure
+  int    mof_max_iter;  //maximum number of iterations for iterative procedures
 };
 
 class MeshBC {
@@ -49,7 +48,6 @@ protected:
   std::vector<int>   cells_material;
   
   double dist_eps_;
-  double ddot_eps_;
   double area_eps_;
   double ang_eps_;
   int    mof_max_iter_;
@@ -65,7 +63,6 @@ public:
   int ncells() const { return (int) cells.size(); }
 
   double dist_eps() const { return dist_eps_; }
-  double ddot_eps() const { return ddot_eps_; }
   double area_eps() const { return area_eps_; }
   double ang_eps() const { return ang_eps_; }
   int    mof_max_iter() const { return mof_max_iter_; }
@@ -103,7 +100,7 @@ private:
   void Split(int cell_ind, const std::vector<double>& n, double d2orgn, int cell_mat);
   void ConstructMinimesh(const std::vector<double>& a2OX, const std::vector<double>& d2orgn, const std::vector<int>& cells_mat);  
 public:
-  MiniMesh(const Cell& base_cell_, double ddot_eps, double dist_eps);
+  MiniMesh(const Cell& base_cell_);
   const Cell& get_base_cell() const { return base_cell; }
   const MeshBC& get_parent_mesh() const;
 

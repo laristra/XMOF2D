@@ -21,27 +21,28 @@
 namespace XMOF2D {
 
 static inline double tri_size(const Point2D& a, const Point2D& b, const Point2D& c) {
-  double v1[2] = { b.x - a.x, b.y - a.y };
-  double v2[2] = { c.x - a.x, c.y - a.y };
-  
-  return 0.5*std::fabs(v1[0]*v2[1] - v1[1]*v2[0]);
+  return 0.5*std::fabs(vpz(a, b, c));
 }
 
 SimpleConvex::SimpleConvex() {
   shift = BAD_POINT;
 }
 
-SimpleConvex::SimpleConvex(const std::vector<Point2D>& p, double dist_eps, double ddot_eps) {
+SimpleConvex::SimpleConvex(const std::vector<Point2D>& p, double dist_eps) {
   v = p;
   shift = Point2D(0.0, 0.0);
-  XMOF2D_ASSERT(vrts_are_ccw(dist_eps, ddot_eps), "Tried to construct a non-convex polygon!");
+  XMOF2D_ASSERT(vrts_are_ccw(dist_eps), "Tried to construct a non-convex polygon!");
 }
 
-bool SimpleConvex::vrts_are_ccw(double dist_eps, double ddot_eps) {
-  return is_ccw(v, dist_eps, ddot_eps);
+const Point2D& SimpleConvex:: cur_shift() const {
+  return shift;
 }
 
-Point2D SimpleConvex::vertex(int i) const {
+bool SimpleConvex::vrts_are_ccw(double dist_eps) const {
+  return is_ccw(v, dist_eps);
+}
+
+const Point2D& SimpleConvex::vertex(int i) const {
   XMOF2D_ASSERT_SIZE_LESS(i, nfaces());
   return v[i];
 }
@@ -65,14 +66,14 @@ double SimpleConvex::size() const {
   double size = 0;
   for (int i = 0; i < n; i++) {
     int ifv = i, isv = (i + 1) % n;
-    size += v[ifv].x * v[isv].y - v[isv].x * v[ifv].y;
+    size += v[ifv].x*v[isv].y - v[isv].x*v[ifv].y;
   }
   size *= 0.5;
   
   if (is_equal(size, 0.0))
-  return 0.0;
+    return 0.0;
   
-  XMOF2D_ASSERT(size > 0.0, "Computed size is negative!");
+  XMOF2D_ASSERT(size > 0.0, "Computed size of a convex polygon is negative!");
   
   return size;
 }
@@ -83,46 +84,52 @@ Point2D SimpleConvex::center() const {
   Point2D centroid(0.0, 0.0);
   for (int i = 0; i < n; i++) {
     int ifv = i, isv = (i + 1)%n;
-    double cur_size_term = v[ifv].x * v[isv].y - v[isv].x * v[ifv].y;
+    double cur_size_term = v[ifv].x*v[isv].y - v[isv].x*v[ifv].y;
     size += cur_size_term;
-    centroid.x += cur_size_term * (v[ifv].x + v[isv].x);
-    centroid.y += cur_size_term * (v[ifv].y + v[isv].y);
+    centroid.x += cur_size_term*(v[ifv].x + v[isv].x);
+    centroid.y += cur_size_term*(v[ifv].y + v[isv].y);
   }
   size *= 0.5;
   
   if (is_equal(size, 0.0))
-  return BAD_POINT;
+    return BAD_POINT;
   
-  XMOF2D_ASSERT(size > 0.0, "Computed size is negative!");
+  XMOF2D_ASSERT(size > 0.0, "Computed size of a convex polygon is negative!");
   
   return centroid/(6*size);
 }
 
-bool SimpleConvex::contains(const Point2D& p, double eps) const {
+bool SimpleConvex::contains(const Point2D& p, double dist_eps) const {
   const int n = nfaces();
-  double new_size = 0;
-  for (int i = 0; i < n; i++)
-    new_size += tri_size(p, v[i], v[(i + 1)%n]);
 
-  return std::fabs(size() - new_size) < eps;
-}
+  for (int i = 0; i < n; i++) {
+    double side_size = distance(v[i], v[(i + 1)%n]);
+    double signed_distance = vpz(v[i], v[(i + 1)%n], p)/side_size;
 
-bool SimpleConvex::contains(const SimpleConvex& sc, double eps) const {
-  const int m = sc.nfaces();
-  for (int i = 0; i < m; i++)
-    if (contains(sc.v[i], eps) == false)
+    if (signed_distance <= -dist_eps)
       return false;
+  }
+
   return true;
 }
 
-double SimpleConvex::dist(const Point2D& p, double area_eps, double dist_eps) const {
-  if (contains(p, area_eps))
+bool SimpleConvex::contains(const SimpleConvex& sc, double dist_eps) const {
+  const int n = sc.nfaces();
+  for (int i = 0; i < n; i++)
+    if (!contains(sc.v[i], dist_eps))
+      return false;
+
+  return true;
+}
+
+double SimpleConvex::dist(const Point2D& p, double dist_eps) const {
+  if (contains(p, dist_eps))
     return 0.0;
   
   const int n = nfaces();
   std::vector<double> d(n);
   for (int i = 0; i < n; i++)
-    d[i] = Segment(v[i], v[(i + 1)%n]).dist(p);
+    d[i] = Segment(v[i], v[(i + 1)%n]).dist_to_seg(p);
   
   return *std::min_element(d.begin(), d.end());
 }
@@ -150,44 +157,40 @@ void SimpleConvex::translate2orig_pos() {
   shift = Point2D(0.0, 0.0);
 }
 
-bool SimpleConvex::is_boundary(const Point2D& p, double eps) const {
-  int nnodes = nfaces();
-  for (int inode = 0; inode < nnodes; inode++) {
-    Segment cur_side(v[inode], v[(inode + 1)%nnodes]);
-    if (cur_side.contains(p, eps))
+bool SimpleConvex::is_boundary(const Point2D& p, double dist_eps) const {
+  int n = nfaces();
+  for (int i = 0; i < n; i++) {
+    if (Segment(v[i], v[(i + 1)%n]).contains(p, dist_eps))
       return true;
   }
   return false;
 }
 
-bool SimpleConvex::is_interior(const Point2D& p, double dist_eps, double ddot_eps) const {
+bool SimpleConvex::is_interior(const Point2D& p, double dist_eps) const {
   int wn = 0;
   int nnodes = nfaces();
   for (int inode = 0; inode < nnodes; inode++) {
     int inextnode = (inode + 1)%nnodes;
     if (v[inode].y <= p.y) {
       if (v[inextnode].y  > p.y)
-        if (is_ccw(v[inode], v[inextnode], p, dist_eps, ddot_eps))
+        if (is_ccw(v[inode], v[inextnode], p, dist_eps))
           ++wn;
     }
     else {
       if (v[inextnode].y <= p.y)
-        if (is_cw(v[inode], v[inextnode], p, dist_eps, ddot_eps))
+        if (is_cw(v[inode], v[inextnode], p, dist_eps))
           --wn;
     }
   }
   return wn;
 }
 
-std::vector<SimpleConvex> SimpleConvex::SimpleConvexCutByLine(double a2OX, const double d2orgn,
-                                                              const double ddot_eps,
-                                                              const double dist_eps,
-                                                              bool area_check_on) {
-  std::vector<double> n(2);
-  n[0] = cos(a2OX);
-  n[1] = sin(a2OX);
-  double n_scal = 1.0/dnrm2(n);
-  dscal(n_scal, n);
+  SimpleConvexLine::Intersect SimpleConvex::SimpleConvexCutByLine(
+    double a2OX, double d2orgn,
+    std::vector<SimpleConvex>& pieces,
+    double dist_eps, bool area_check_on) const {
+  pieces.clear();
+  std::vector<double> n = {cos(a2OX), sin(a2OX)};
   
   int nsides = nfaces();
   std::vector<Point2DLine::Position> vrts_pos(nsides);
@@ -207,9 +210,8 @@ std::vector<SimpleConvex> SimpleConvex::SimpleConvexCutByLine(double a2OX, const
       case Point2DLine::Position::ABOVE: 
         v_above.push_back(vertex(iv0)); break;
       case Point2DLine::Position::ON:
-        if (vrts_pos[iv0] == vrts_pos[iv1]) {
-          THROW_EXCEPTION("Side lies on the cutting line!");
-        }
+        if (vrts_pos[iv0] == vrts_pos[iv1])
+          return SimpleConvexLine::Intersect::ON_EDGE;
         else {
           //Line intersects the side at the first node
           XMOF2D_ASSERT(int_point_ind[1] == -1, "Extra intersection!");
@@ -230,7 +232,7 @@ std::vector<SimpleConvex> SimpleConvex::SimpleConvexCutByLine(double a2OX, const
       XMOF2D_ASSERT(int_point_ind[1] == -1, "Extra intersection!");
 
       Segment cur_side = Segment(vertex(iv0), vertex(iv1));
-      Point2D int_point = cur_side.LineIntersect(n, d2orgn, ddot_eps, dist_eps);
+      Point2D int_point = cur_side.LineIntersect(n, d2orgn, dist_eps);
       int iip = (int_point_ind[0] == -1) ? 0 : 1;
 
       if (area_check_on) {          
@@ -238,9 +240,9 @@ std::vector<SimpleConvex> SimpleConvex::SimpleConvexCutByLine(double a2OX, const
           (vrts_pos[iv0] == Point2DLine::Position::BELOW) ? iv0 : iv1;
 
         if (nearest_lhp_ivrt[0] == nearest_lhp_ivrt[1]) {
-          XMOF2D_ASSERT(std::fabs(vpz(vertex(nearest_lhp_ivrt[1]), int_point, 
-                                      v_below[int_point_ind[0]])) >= 2*epsilon,
-                        "Area of the cutoff is below the machine epsilon!");
+          if (std::fabs(vpz(vertex(nearest_lhp_ivrt[1]), int_point, 
+                                   v_below[int_point_ind[0]])) < 2*epsilon)
+            return SimpleConvexLine::Intersect::AREA_BELOW_EPS;                       
         }
       }
       
@@ -249,26 +251,21 @@ std::vector<SimpleConvex> SimpleConvex::SimpleConvexCutByLine(double a2OX, const
       v_above.push_back(int_point);
     }
   }
+  if (int_point_ind[1] == -1)
+    return (int_point_ind[0] == -1) ? SimpleConvexLine::Intersect::NO_INTERSECT :
+      SimpleConvexLine::Intersect::THROUGH_NODE;
   
-  XMOF2D_ASSERT(int_point_ind[1] != -1, 
-                "Cutting line does not pass through the interior!");
+  pieces.resize(2);
+  pieces[0] = SimpleConvex(v_below, dist_eps);
+  pieces[1] = SimpleConvex(v_above, dist_eps);
   
-  std::vector<SimpleConvex> SC_cuts(2);
-  SC_cuts[0] = SimpleConvex(v_below, dist_eps, ddot_eps);
-  SC_cuts[1] = SimpleConvex(v_above, dist_eps, ddot_eps);
-  
-  return SC_cuts;
+  return SimpleConvexLine::Intersect::VALID_INTERSECT;
 }
 
 double SimpleConvex::compute_cutting_dist(double a2OX, double cut_area,
-                                          double area_eps, double ddot_eps, double dist_eps,
-                                          int max_iter) {
-  std::vector<double> n(2);
-  n[0] = cos(a2OX);
-  n[1] = sin(a2OX);
-  double n_scal = 1.0/dnrm2(n);
-  dscal(n_scal, n);
-  
+                                          double area_eps, double dist_eps,
+                                          int max_iter) const {
+  std::vector<double> n = {cos(a2OX), sin(a2OX)};
   double full_size = size();
 
   std::vector<double> dbnd = { DBL_MAX, -DBL_MAX };
@@ -277,7 +274,7 @@ double SimpleConvex::compute_cutting_dist(double a2OX, double cut_area,
     if (cur_d < dbnd[0]) dbnd[0] = cur_d;
     if (cur_d > dbnd[1]) dbnd[1] = cur_d;
   }
- 
+  
   if (cut_area < area_eps) return dbnd[0];
   if (cut_area > full_size - area_eps) return dbnd[1];
 
@@ -324,28 +321,23 @@ double SimpleConvex::compute_cutting_dist(double a2OX, double cut_area,
     
     std::vector<SimpleConvex> SC_cuts;
     double cur_area;
-    try {
-      SC_cuts = SimpleConvexCutByLine(a2OX, d2orgn, ddot_eps, dist_eps, true);
-    }
-    catch (Exception e) {
-      if (e.is("Side lies on the cutting line!") ||
-          e.is("Area of the cutoff is below the machine epsilon!") ||
-          e.is("Cutting line does not pass through the interior!")) {
-        //Distance check with the original bounds: 
-        //we either sliced off nothing or everything
-        cur_area = (std::fabs(d2orgn - dbnd[0]) < std::fabs(d2orgn - dbnd[1])) ? 
-          0.0 : full_size;
-        darea = cur_area - area_bnd[1];
+    SimpleConvexLine::Intersect int_res;
+    int_res = SimpleConvexCutByLine(a2OX, d2orgn, SC_cuts, dist_eps, true);
 
-        cur_dbnd[0] = cur_dbnd[1];
-        cur_dbnd[1] = d2orgn;
-        area_bnd[0] = area_bnd[1];
-        area_bnd[1] = cur_area;
+    if (int_res != SimpleConvexLine::Intersect::VALID_INTERSECT) {
+      //Distance check with the original bounds: 
+      //we either sliced off nothing or everything
+      cur_area = (std::fabs(d2orgn - dbnd[0]) < std::fabs(d2orgn - dbnd[1])) ? 
+        0.0 : full_size;
+      darea = cur_area - area_bnd[1];
 
-        continue;                    
-      } 
-      else THROW_EXCEPTION(e.what());
-    }
+      cur_dbnd[0] = cur_dbnd[1];
+      cur_dbnd[1] = d2orgn;
+      area_bnd[0] = area_bnd[1];
+      area_bnd[1] = cur_area;
+
+      continue;                    
+    } 
 
     cur_area = SC_cuts[0].size();
     area_err = std::fabs(cur_area - cut_area);     
@@ -376,11 +368,13 @@ double SimpleConvex::compute_cutting_dist(double a2OX, double cut_area,
   return d2orgn;
 }
 
-double SimpleConvex::centroid_error(Point2D ref_centroid) {
+double SimpleConvex::centroid_error(Point2D ref_centroid) const {
   return pow(distance(center(), ref_centroid), 2)/size();
 }
 
-double SimpleConvex::compute_optimal_angle(double cut_area, Point2D ref_centroid, double ang_eps, double area_eps, double ddot_eps, double dist_eps, int max_iter) {
+double SimpleConvex::compute_optimal_angle(double cut_area, Point2D ref_centroid, 
+                                           double ang_eps, double area_eps, double dist_eps, 
+                                           int max_iter) const {
   Point2D cur_centroid = center();
   std::vector<double> dcen = cur_centroid - ref_centroid;
   double a2OX = atan2(dcen[1], dcen[0]);
@@ -389,8 +383,12 @@ double SimpleConvex::compute_optimal_angle(double cut_area, Point2D ref_centroid
   std::vector<double> guess_err(3);
 
   for (int ia = 0; ia < 3; ia++) {
-    double d2orgn = compute_cutting_dist(a_guess[ia], cut_area, area_eps, ddot_eps, dist_eps, max_iter);
-    std::vector<SimpleConvex> SC_cuts = SimpleConvexCutByLine(a_guess[ia], d2orgn, ddot_eps, dist_eps, true);
+    double d2orgn = compute_cutting_dist(a_guess[ia], cut_area, area_eps, dist_eps, max_iter);
+    std::vector<SimpleConvex> SC_cuts;
+    XMOF2D_ASSERT(
+      SimpleConvexCutByLine(a_guess[ia], d2orgn, SC_cuts, dist_eps, true) ==
+      SimpleConvexLine::Intersect::VALID_INTERSECT, 
+      "Invalid intersection of the cutting line and polygon");
     guess_err[ia] = SC_cuts[0].centroid_error(ref_centroid);
     if (guess_err[ia] < dist_eps) return a_guess[ia];
   }
@@ -405,13 +403,22 @@ double SimpleConvex::compute_optimal_angle(double cut_area, Point2D ref_centroid
       a_guess[0] -= a_guess[1] - a_guess[0];
       a_guess[2] += a_guess[2] - a_guess[1];
 
-      double d2orgn = compute_cutting_dist(a_guess[0], cut_area, area_eps, ddot_eps, dist_eps, max_iter);
-      std::vector<SimpleConvex> SC_cuts = SimpleConvexCutByLine(a_guess[0], d2orgn, ddot_eps, dist_eps, true);
+      double d2orgn = compute_cutting_dist(a_guess[0], cut_area, area_eps, dist_eps, max_iter);
+      std::vector<SimpleConvex> SC_cuts;
+      XMOF2D_ASSERT(
+        SimpleConvexCutByLine(a_guess[0], d2orgn, SC_cuts, dist_eps, true) ==
+        SimpleConvexLine::Intersect::VALID_INTERSECT, 
+        "Invalid intersection of the cutting line and polygon");
+
       guess_err[0] = SC_cuts[0].centroid_error(ref_centroid);
       if (guess_err[0] < dist_eps) return a_guess[0];
 
-      d2orgn = compute_cutting_dist(a_guess[2], cut_area, area_eps, ddot_eps, dist_eps, max_iter);
-      SC_cuts = SimpleConvexCutByLine(a_guess[2], d2orgn, ddot_eps, dist_eps, true);
+      d2orgn = compute_cutting_dist(a_guess[2], cut_area, area_eps, dist_eps, max_iter);
+      XMOF2D_ASSERT(
+        SimpleConvexCutByLine(a_guess[2], d2orgn, SC_cuts, dist_eps, true) ==
+        SimpleConvexLine::Intersect::VALID_INTERSECT, 
+        "Invalid intersection of the cutting line and polygon");
+
       guess_err[2] = SC_cuts[0].centroid_error(ref_centroid);
       if (guess_err[2] < dist_eps) return a_guess[2];
     }
@@ -422,8 +429,14 @@ double SimpleConvex::compute_optimal_angle(double cut_area, Point2D ref_centroid
         a_guess[0] = a_guess[1] - 2*(a_guess[2] - a_guess[1]);
         std::rotate(guess_err.begin(), guess_err.end() - 1, guess_err.end());
         
-        double d2orgn = compute_cutting_dist(a_guess[0], cut_area, area_eps, ddot_eps, dist_eps, max_iter);
-        std::vector<SimpleConvex> SC_cuts = SimpleConvexCutByLine(a_guess[0], d2orgn, ddot_eps, dist_eps, true);
+        double d2orgn = compute_cutting_dist(a_guess[0], cut_area, area_eps, dist_eps, max_iter);
+
+        std::vector<SimpleConvex> SC_cuts;
+        XMOF2D_ASSERT(
+          SimpleConvexCutByLine(a_guess[0], d2orgn, SC_cuts, dist_eps, true) ==
+          SimpleConvexLine::Intersect::VALID_INTERSECT, 
+          "Invalid intersection of the cutting line and polygon");
+
         guess_err[0] = SC_cuts[0].centroid_error(ref_centroid);
         if (guess_err[0] < dist_eps) return a_guess[0];
       }
@@ -432,8 +445,13 @@ double SimpleConvex::compute_optimal_angle(double cut_area, Point2D ref_centroid
         a_guess[2] = a_guess[1] + 2*(a_guess[1] - a_guess[0]);
         std::rotate(guess_err.begin(), guess_err.begin() + 1, guess_err.end());
         
-        double d2orgn = compute_cutting_dist(a_guess[2], cut_area, area_eps, ddot_eps, dist_eps, max_iter);
-        std::vector<SimpleConvex> SC_cuts = SimpleConvexCutByLine(a_guess[2], d2orgn, ddot_eps, dist_eps, true);
+        double d2orgn = compute_cutting_dist(a_guess[2], cut_area, area_eps, dist_eps, max_iter);
+        std::vector<SimpleConvex> SC_cuts;
+        XMOF2D_ASSERT(
+          SimpleConvexCutByLine(a_guess[2], d2orgn, SC_cuts, dist_eps, true) ==
+          SimpleConvexLine::Intersect::VALID_INTERSECT, 
+          "Invalid intersection of the cutting line and polygon");
+
         guess_err[2] = SC_cuts[0].centroid_error(ref_centroid);
         if (guess_err[2] < dist_eps) return a_guess[2];        
       }
@@ -450,8 +468,13 @@ double SimpleConvex::compute_optimal_angle(double cut_area, Point2D ref_centroid
   std::vector<double> gr_guess = { a_guess[0] + (1.0 - gratio)*daguess, a_guess[0] + gratio*daguess };
   std::vector<double> gr_error(2);
   for (int ia = 0; ia < 2; ia++) {
-    double d2orgn = compute_cutting_dist(gr_guess[ia], cut_area, area_eps, ddot_eps, dist_eps, max_iter);
-    std::vector<SimpleConvex> SC_cuts = SimpleConvexCutByLine(gr_guess[ia], d2orgn, ddot_eps, dist_eps, true);
+    double d2orgn = compute_cutting_dist(gr_guess[ia], cut_area, area_eps, dist_eps, max_iter);
+    std::vector<SimpleConvex> SC_cuts;
+    XMOF2D_ASSERT(
+      SimpleConvexCutByLine(gr_guess[ia], d2orgn, SC_cuts, dist_eps, true) ==
+      SimpleConvexLine::Intersect::VALID_INTERSECT, 
+      "Invalid intersection of the cutting line and polygon");    
+
     gr_error[ia] = SC_cuts[0].centroid_error(ref_centroid);
   }
   for (iter_count = 0; iter_count < max_iter; iter_count++) {
@@ -466,8 +489,13 @@ double SimpleConvex::compute_optimal_angle(double cut_area, Point2D ref_centroid
       gr_error[1] = gr_error[0];
       gr_guess[0] = a_guess[0] + (1.0 - gratio)*daguess;
       
-      double d2orgn = compute_cutting_dist(gr_guess[0], cut_area, area_eps, ddot_eps, dist_eps, max_iter);
-      std::vector<SimpleConvex> SC_cuts = SimpleConvexCutByLine(gr_guess[0], d2orgn, ddot_eps, dist_eps, true);
+      double d2orgn = compute_cutting_dist(gr_guess[0], cut_area, area_eps, dist_eps, max_iter);
+      std::vector<SimpleConvex> SC_cuts;
+      XMOF2D_ASSERT(
+        SimpleConvexCutByLine(gr_guess[0], d2orgn, SC_cuts, dist_eps, true) ==
+        SimpleConvexLine::Intersect::VALID_INTERSECT, 
+        "Invalid intersection of the cutting line and polygon");
+
       gr_error[0] = SC_cuts[0].centroid_error(ref_centroid);
     }
     else {
@@ -477,18 +505,27 @@ double SimpleConvex::compute_optimal_angle(double cut_area, Point2D ref_centroid
       gr_error[0] = gr_error[1];
       gr_guess[1] = a_guess[0] + gratio*daguess;
       
-      double d2orgn = compute_cutting_dist(gr_guess[1], cut_area, area_eps, ddot_eps, dist_eps, max_iter);
-      std::vector<SimpleConvex> SC_cuts = SimpleConvexCutByLine(gr_guess[1], d2orgn, ddot_eps, dist_eps, true);
+      double d2orgn = compute_cutting_dist(gr_guess[1], cut_area, area_eps, dist_eps, max_iter);
+      std::vector<SimpleConvex> SC_cuts;
+      XMOF2D_ASSERT(
+        SimpleConvexCutByLine(gr_guess[1], d2orgn, SC_cuts, dist_eps, true) ==
+        SimpleConvexLine::Intersect::VALID_INTERSECT, 
+        "Invalid intersection of the cutting line and polygon");
+
       gr_error[1] = SC_cuts[0].centroid_error(ref_centroid);
     }
   }
   return 0.5*(a_guess[0] + a_guess[2]);
 }
 
-void SimpleConvex::compute_optimal_cuts(const std::vector<double>& cut_vol_fracs, const std::vector<Point2D>& ref_centroids, 
-                                        double ang_eps, double area_eps, double ddot_eps, double dist_eps, int max_iter, 
-                                        std::vector<int>& opt_mat_order, std::vector<double>& opt_a2OX, std::vector<double>& opt_d2orgn) {
-  translate2origin();
+void SimpleConvex::compute_optimal_cuts(const std::vector<double>& cut_vol_fracs, 
+                                        const std::vector<Point2D>& ref_centroids, 
+                                        double ang_eps, double area_eps, double dist_eps, 
+                                        int max_iter, std::vector<int>& opt_mat_order, 
+                                        std::vector<double>& opt_a2OX, std::vector<double>& opt_d2orgn) const {
+  SimpleConvex shifted_SC = *this;
+  shifted_SC.translate2origin();
+  const Point2D& SC_shift = shifted_SC.cur_shift();
   
   int nmat = (int) cut_vol_fracs.size();
   std::vector<int> cur_mat_order(nmat);
@@ -499,20 +536,24 @@ void SimpleConvex::compute_optimal_cuts(const std::vector<double>& cut_vol_fracs
   std::vector<double> cur_d2orgn(nmat - 1);
   do {
     double aggr_err = 0.0;
-    SimpleConvex cur_SC = SimpleConvex(vertices(), dist_eps, ddot_eps);
+    SimpleConvex cur_SC = shifted_SC;
     for(int imat = 0; imat < nmat - 1; imat++) {
       int cur_mat = cur_mat_order[imat];
       double cut_area = cut_vol_fracs[cur_mat] * size();
       
-      cur_a2OX[imat] = cur_SC.compute_optimal_angle(cut_area, ref_centroids[cur_mat] + shift, ang_eps, area_eps, ddot_eps, dist_eps, max_iter);
-      cur_d2orgn[imat] = cur_SC.compute_cutting_dist(cur_a2OX[imat], cut_area, area_eps, ddot_eps, dist_eps, max_iter);
+      cur_a2OX[imat] = cur_SC.compute_optimal_angle(cut_area, ref_centroids[cur_mat] + SC_shift, ang_eps, area_eps, dist_eps, max_iter);
+      cur_d2orgn[imat] = cur_SC.compute_cutting_dist(cur_a2OX[imat], cut_area, area_eps, dist_eps, max_iter);
       
-      std::vector<SimpleConvex> SC_cuts = cur_SC.SimpleConvexCutByLine(cur_a2OX[imat], cur_d2orgn[imat], ddot_eps, dist_eps, true);
-      
-      aggr_err += SC_cuts[0].centroid_error(ref_centroids[cur_mat] + shift);
+      std::vector<SimpleConvex> SC_cuts;
+      XMOF2D_ASSERT(
+        cur_SC.SimpleConvexCutByLine(cur_a2OX[imat], cur_d2orgn[imat], SC_cuts, dist_eps, true) ==
+        SimpleConvexLine::Intersect::VALID_INTERSECT, 
+        "Invalid intersection of the cutting line and polygon");      
+
+      aggr_err += SC_cuts[0].centroid_error(ref_centroids[cur_mat] + SC_shift);
       cur_SC = SC_cuts[1];
     }
-    aggr_err += cur_SC.centroid_error(ref_centroids[cur_mat_order[nmat - 1]] + shift);
+    aggr_err += cur_SC.centroid_error(ref_centroids[cur_mat_order[nmat - 1]] + SC_shift);
     
     if (aggr_err < min_err) {
       min_err = aggr_err;
@@ -521,8 +562,6 @@ void SimpleConvex::compute_optimal_cuts(const std::vector<double>& cut_vol_fracs
       opt_d2orgn = cur_d2orgn;
     }
   } while (std::next_permutation(cur_mat_order.begin(), cur_mat_order.end()));
-  
-  translate2orig_pos();
 }
 
 }

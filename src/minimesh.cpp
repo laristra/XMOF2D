@@ -15,9 +15,12 @@
 
 namespace XMOF2D {
 
-MiniMesh::MiniMesh(const Cell& base_cell_, double ddot_eps, double dist_eps) : base_cell(base_cell_) {
-  ddot_eps_ = ddot_eps;
-  dist_eps_ = dist_eps;
+MiniMesh::MiniMesh(const Cell& base_cell_) : base_cell(base_cell_) {
+  dist_eps_ = base_cell_.get_mesh().dist_eps();
+  area_eps_ = base_cell_.get_mesh().area_eps();
+  ang_eps_ = base_cell_.get_mesh().ang_eps();
+  mof_max_iter_ = base_cell_.get_mesh().mof_max_iter();
+
   nodes_shift = Point2D(0.0, 0.0);
 }
 
@@ -127,7 +130,7 @@ void MiniMesh::Split(int cell_ind, const std::vector<double>& n, double d2orgn, 
       }
         
       case SegLine::Position::INTERSECTS: {
-        Point2D int_point = cur_side.LineIntersect(n, d2orgn, ddot_eps(), dist_eps());
+        Point2D int_point = cur_side.LineIntersect(n, d2orgn, dist_eps());
         XMOF2D_ASSERT(int_point_ind[1] == -1, "Extra intersection!");
         int iip = (int_point_ind[0] == -1) ? 0 : 1;
 
@@ -211,7 +214,7 @@ void MiniMesh::Split(int cell_ind, const std::vector<double>& n, double d2orgn, 
     int ncfaces = (int) cells_faces[ic].size();
     if (ncfaces == 2) {
       if (!XMOF2D::is_ccw(get_face(cells_faces[ic][0]).as_segment(),
-                          get_face(cells_faces[ic][1]).as_segment(), dist_eps(), ddot_eps()))
+                          get_face(cells_faces[ic][1]).as_segment(), dist_eps()))
         std::rotate(cells_faces[ic].begin(), cells_faces[ic].begin() + 1, cells_faces[ic].end());
       
       continue;
@@ -258,8 +261,7 @@ void MiniMesh::ConstructMinimesh(const std::vector<double>& a2OX, const std::vec
   for (int icell = 0; icell < nc - 1; icell++) {
     cur_line_n[0] = cos(a2OX[icell]);
     cur_line_n[1] = sin(a2OX[icell]);
-    double n_scal = 1.0/dnrm2(cur_line_n);
-    dscal(n_scal, cur_line_n);
+
     Split(icell, cur_line_n, d2orgn[icell], cells_mat[icell]);
   }
   cells_material[nc - 1] = cells_mat[nc - 1];

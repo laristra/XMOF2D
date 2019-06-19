@@ -15,46 +15,54 @@
 
 namespace XMOF2D {
 
+namespace SimpleConvexLine {
+  enum Intersect {
+    VALID_INTERSECT, AREA_BELOW_EPS, ON_EDGE, THROUGH_NODE, NO_INTERSECT
+  };
+}
+
 class SimpleConvex : public GObject2D {
 protected:
   std::vector<Point2D> v;
   Point2D              shift;
   
-  bool vrts_are_ccw(double dist_eps, double ddot_eps);
+  bool vrts_are_ccw(double dist_eps) const;
 
 public:
   SimpleConvex();
-  SimpleConvex(const std::vector<Point2D>& v, double dist_eps, double ddot_eps);
+  SimpleConvex(const std::vector<Point2D>& v, double dist_eps);
   
-  Point2D                     	vertex(int i) const;
+  const Point2D&             	vertex(int i) const;
   const std::vector<Point2D>&	vertices() const;
-  Point2D                     	center() const;
-  std::unique_ptr<GObject1D>  	face(int i) const;
+  Point2D                     center() const;
+  std::unique_ptr<GObject1D>  face(int i) const;
   int                       	nfaces() const;
   virtual double            	size() const;
-  virtual bool              	contains(const Point2D& p, double eps) const;
-  bool                      	contains(const SimpleConvex& sc, double eps) const;
-  double                    	dist(const Point2D& p, double area_eps, double dist_eps) const;
+  virtual bool              	contains(const Point2D& p, double dist_eps) const;
+  bool                      	contains(const SimpleConvex& sc, double dist_eps) const;
+  double                    	dist(const Point2D& p, double dist_eps) const;
+  const Point2D&              cur_shift() const;
   
   void translate2origin();
   void translate2orig_pos();
-  bool is_boundary(const Point2D& p, double eps) const;
-  bool is_interior(const Point2D& p, double dist_eps, double ddot_eps) const;
-  std::vector<SimpleConvex> SimpleConvexCutByLine(double a2OX, double d2orgn,
-                                                  double ddot_eps, double dist_eps,
-                                                  bool ipts_check_on);
+  bool is_boundary(const Point2D& p, double dist_eps) const;
+  bool is_interior(const Point2D& p, double dist_eps) const;
+  SimpleConvexLine::Intersect SimpleConvexCutByLine(double a2OX, double d2orgn,
+                                                   std::vector<SimpleConvex>& pieces,
+                                                   double dist_eps, bool area_check_on) const;
   double compute_cutting_dist(double a2OX, double cut_area,
-                              double area_eps, double ddot_eps, double dist_eps, int max_iter);
-  double centroid_error(Point2D ref_centroid);
+                              double area_eps, double dist_eps, int max_iter) const;
+  double centroid_error(Point2D ref_centroid) const ;
   double compute_optimal_angle(double cut_area, Point2D ref_centroid,
                                double ang_eps, double area_eps,
-                               double ddot_eps, double dist_eps, int max_iter);
+                               double dist_eps, int max_iter) const;
   void compute_optimal_cuts(const std::vector<double>& cut_vol_fracs,
                             const std::vector<Point2D>& ref_centroids,
                             double ang_eps, double area_eps,
-                            double ddot_eps, double dist_eps, int max_iter,
+                            double dist_eps, int max_iter,
                             std::vector<int>& opt_mat_order,
-                            std::vector<double>& opt_a2OX, std::vector<double>& opt_d2orgn);
+                            std::vector<double>& opt_a2OX, 
+                            std::vector<double>& opt_d2orgn) const;
 };
 
 }

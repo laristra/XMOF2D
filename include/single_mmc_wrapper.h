@@ -20,8 +20,6 @@ extern "C" {
 
 void xmof2d_set_distance_tolerance(double dist_eps);
 void xmof2d_get_distance_tolerance(double* dist_eps);
-void xmof2d_set_dot_product_tolerance(double ddot_eps);
-void xmof2d_get_dot_product_tolerance(double* ddot_eps);
 void xmof2d_set_area_tolerance(double area_eps);
 void xmof2d_get_area_tolerance(double* area_eps);
 void xmof2d_set_angle_tolerance(double ang_eps);

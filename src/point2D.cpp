@@ -9,6 +9,7 @@
 */
 
 #include "point2D.h"
+#include "segment.h"
 #include "tools.h"
 #include "exception.h"
 #include "simple_vector.h"
@@ -87,14 +88,12 @@ double distance(const Point2D& p1, const Point2D& p2) {
   return sqrt(pow2(p1.x - p2.x) + pow2(p1.y - p2.y));
 }
 
-double vpz(const Point2D& a, const Point2D& b, const Point2D& c)
-{
+double vpz(const Point2D& a, const Point2D& b, const Point2D& c) {
   return ( (b.x - a.x)*(c.y - a.y) - (c.x -  a.x)*(b.y - a.y) );
 }
 
 int vpsign(const Point2D& a, const Point2D& b, const Point2D& c, 
-           double dist_eps, double ddot_eps)
-{
+           double dist_eps) {
   std::vector<double> vec[2] = {b - a, c - a};
   for (int iv = 0; iv < 2; iv++) {
     double vsize = dnrm2(vec[iv]);
@@ -106,63 +105,52 @@ int vpsign(const Point2D& a, const Point2D& b, const Point2D& c,
 
   double cpz = vec[0][0]*vec[1][1] - vec[1][0]*vec[0][1];
 
-  if (std::fabs(cpz) < ddot_eps) return 0;
+  if (is_equal(cpz, 0.0)) return 0;
   else return (std::signbit(cpz)) ? -1 : 1;
 }
 
-int dpsign(const Point2D& a, const Point2D& b, const Point2D& c, 
-           double dist_eps, double ddot_eps)
-{
-  std::vector<double> vec[2] = {b - a, c - a};
-  for (int iv = 0; iv < 2; iv++) {
-    double vsize = dnrm2(vec[iv]);
-    XMOF2D_ASSERT(vsize >= dist_eps, 
-      "When computing the sign of a dot product, one of the vectors is of length " <<
-      vsize << ", which is below the distance tolerance of " << dist_eps);
-    dscal(1.0/vsize, vec[iv]);
-  }
-
-  double dp = vec[0][0]*vec[1][0] + vec[0][1]*vec[1][1];
-
-  if (std::fabs(dp) < ddot_eps) return 0;
-  else return (std::signbit(dp)) ? -1 : 1;
-}
-
-bool is_cw(const Point2D& a, const Point2D& b, const Point2D& c, double dist_eps, double ddot_eps) {
-  int vp_sign = vpsign(a, b, c, dist_eps, ddot_eps);
-  if (vp_sign != 0) return (vp_sign < 0);
-  else return (dpsign(a, b, c, dist_eps, ddot_eps));
-}
-
-bool on_same_line(const Point2D& a, const Point2D& b, const Point2D& c, double dist_eps, double ddot_eps) {
-  return (vpsign(a, b, c, dist_eps, ddot_eps) == 0);
+bool is_cw(const Point2D& a, const Point2D& b, const Point2D& c, double dist_eps) {
+  return (vpsign(a, b, c, dist_eps) < 0);
 }
   
-bool is_ccw(const Point2D& a, const Point2D& b, const Point2D& c, double dist_eps, double ddot_eps) {
-  int vp_sign = vpsign(a, b, c, dist_eps, ddot_eps);
-  if (vp_sign != 0) return (vp_sign > 0);
-  else return (dpsign(a, b, c, dist_eps, ddot_eps));
+bool is_ccw(const Point2D& a, const Point2D& b, const Point2D& c, double dist_eps) {
+  return (vpsign(a, b, c, dist_eps) > 0);  
 }
 
-bool is_ccw(const std::vector<Point2D>& p, double dist_eps, double ddot_eps) {
+bool is_ccw(const std::vector<Point2D>& p, double dist_eps) {
   int np = (int) p.size();
   XMOF2D_ASSERT(np > 2, "Sequence should contain at least three points");
-  
+
+  std::vector<bool> is_hanging(np, false);
+  for (int i = 0; i < np; i++)
+    if (Segment(p[i], p[(i + 2)%np]).contains(p[(i + 1)%np], dist_eps))
+      is_hanging[(i + 1)%np] = true;
+
   for (int i = 0; i < np; i++)  {
-    if (!is_ccw(p[i], p[(i + 1)%np], p[(i + 2)%np], dist_eps, ddot_eps))
+    int imp = (i + 1)%np;
+    if (is_hanging[imp]) continue;
+
+    int ifp = i, isp = (i + 2)%np;
+    while (is_hanging[ifp])
+      ifp = (np + ifp - 1)%np;
+    while (is_hanging[isp])
+      isp = (isp + 1)%np;
+
+    if (!is_ccw(p[ifp], p[imp], p[isp], dist_eps))
       return false;
   }
   
   return true;
 }
   
-Point2DLine::Position Point2D::PosWRT2Line(std::vector<double> n, double d2orgn, double eps) {
+Point2DLine::Position Point2D::PosWRT2Line(std::vector<double> n, double d2orgn, 
+                                           double dist_eps) const {
   std::vector<double> v2l = vec();
   daxpy(-d2orgn, n, v2l);
   double lv = ddot(v2l, n);
     
   Point2DLine::Position pos;
-  if (std::fabs(lv) < eps)
+  if (std::fabs(lv) < dist_eps)
     pos = Point2DLine::Position::ON;
     else {
       if (std::signbit(lv))
@@ -172,23 +160,6 @@ Point2DLine::Position Point2D::PosWRT2Line(std::vector<double> n, double d2orgn,
   }
   
   return pos;
-}
-
-Point2D LineLineIntersect(const std::vector<Point2D>& l1p, const std::vector<Point2D>& l2p, double eps) {
-  XMOF2D_ASSERT_SIZE(l1p.size(), 2);
-  XMOF2D_ASSERT_SIZE(l2p.size(), 2);
-  double denom = (l1p[0].x - l1p[1].x)*(l2p[0].y - l2p[1].y) -
-                 (l1p[0].y - l1p[1].y)*(l2p[0].x - l2p[1].x);
-  if (std::fabs(denom) < eps)
-    return BAD_POINT;
-  
-  Point2D pint;
-  pint.x = (l1p[0].x*l1p[1].y - l1p[0].y*l1p[1].x)*(l2p[0].x - l2p[1].x) -
-           (l2p[0].x*l2p[1].y - l2p[0].y*l2p[1].x)*(l1p[0].x - l1p[1].x);
-  pint.y = (l1p[0].x*l1p[1].y - l1p[0].y*l1p[1].x)*(l2p[0].y - l2p[1].y) -
-           (l2p[0].x*l2p[1].y - l2p[0].y*l2p[1].x)*(l1p[0].y - l1p[1].y);
-  
-  return pint/denom;
 }
 
 std::ostream& operator<<(std::ostream& os, const Point2D& p) {

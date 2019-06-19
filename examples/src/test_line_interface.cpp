@@ -46,10 +46,9 @@ int main(int argc, char** argv) {
   }
 
   XMOF2D::IRTolerances ir_tolerances;
-  ir_tolerances.dist_eps = 1.0e-14;
-  ir_tolerances.ddot_eps = 1.0e-14;
-  ir_tolerances.area_eps = 1.0e-14;
-  ir_tolerances.ang_eps = 1.0e-13;
+  ir_tolerances.dist_eps = 2.5e-16;
+  ir_tolerances.area_eps = 2.5e-16;
+  ir_tolerances.ang_eps = 1.0e-14;
   ir_tolerances.mof_max_iter = 10000;
   
   mesh_cfg.cells_material.clear();
@@ -83,9 +82,8 @@ int main(int argc, char** argv) {
   std::cout << std::endl;
   
 
-  std::vector<XMOF2D::Point2D> ref_line = {
-    XMOF2D::Point2D(0.0, mat_int_shift),
-    XMOF2D::Point2D(1.0, mat_int_slope + mat_int_shift)};
+  XMOF2D::Segment ref_line_seg(XMOF2D::Point2D(0.0, mat_int_shift),
+                               XMOF2D::Point2D(1.0, mat_int_slope + mat_int_shift));
 
   double max_hausdorff = 0.0;
   int ncmp_int = 0;
@@ -116,7 +114,8 @@ int main(int argc, char** argv) {
       else if (vrts_pos[0] != vrts_pos[1]) {
         should_be_mmc = true;
         
-        XMOF2D::Point2D ref_int = LineLineIntersect(ref_line, side_vrts, deps);
+        XMOF2D::Point2D ref_int = XMOF2D::LineLineIntersect(ref_line_seg, 
+          XMOF2D::Segment(side_vrts[0], side_vrts[1]), deps);
         ref_int_pts.push_back(ref_int);
       }
     }
@@ -147,7 +146,7 @@ int main(int argc, char** argv) {
 
         for (int iseg = 0; iseg < 2; iseg++)
           for (int ivrt = 0; ivrt < 2; ivrt++) {
-            double cur_dist = cmp_segs[iseg].dist(cmp_segs[(iseg + 1)%2][ivrt]);
+            double cur_dist = cmp_segs[iseg].dist_to_seg(cmp_segs[(iseg + 1)%2][ivrt]);
             if (cur_dist > max_hausdorff)
               max_hausdorff = cur_dist;
           }

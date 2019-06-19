@@ -34,18 +34,6 @@ void xmof2d_get_distance_tolerance(double* dist_eps) {
   *dist_eps = xmof2d_tol.dist_eps;
 }
 
-void xmof2d_set_dot_product_tolerance(double ddot_eps) {
-  if (ddot_eps <= 0.0) {
-    fprintf(stderr, "%s", "\nDot product tolerance should be positive!\n");
-    exit(EXIT_FAILURE);
-  }
-  xmof2d_tol.ddot_eps = ddot_eps;
-}
-
-void xmof2d_get_dot_product_tolerance(double* ddot_eps) {
-  *ddot_eps = xmof2d_tol.ddot_eps;
-}
-
 void xmof2d_set_area_tolerance(double area_eps) {
   if (area_eps <= 0.0) {
     fprintf(stderr, "%s", "\nVolume fraction tolerance should be positive!\n");

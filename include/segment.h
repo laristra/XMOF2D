@@ -31,28 +31,31 @@ public:
   const Segment& operator=(const Segment& seg);
   bool  operator==(const Segment& p) const;
   bool  operator!=(const Segment& p) const;
-  Point2D operator[](int i) const;
+  const Point2D& operator[](int i) const;
   
   std::vector<Point2D> vrts() const { return {v[0], v[1]}; }
   
   int     npoints() const { return 2; }
-  bool    contains(const Point2D& p, double eps) const;
-  double  dist(const Point2D& p) const;
+  bool    contains(const Point2D& p, double dist_eps) const;
+  double  dist_to_seg(const Point2D& p) const;
+  double  dist_to_line(const Point2D& p) const;
   
   double              size() const;
-  Point2D               middle() const;
+  Point2D             middle() const;
   std::vector<double> normal() const;
   std::vector<double> direction() const;
   
-  SegLine::Position PosWRT2Line(std::vector<double> n, double d2orgn, double eps);
-  Point2D LineIntersect(std::vector<double> n, double d2orgn, double denom_eps, double eps);
+  SegLine::Position PosWRT2Line(std::vector<double> n, double d2orgn, double dist_eps) const;
+  Point2D LineIntersect(std::vector<double> n, double d2orgn, double dist_eps) const;
   
   friend std::ostream& operator<<(std::ostream& os, const Segment& s);
 };
 
-bool is_ccw(const Segment& a, const Segment& b, double dist_eps, double ddot_eps);
-bool is_ccw(const std::vector<Segment>& segs, double dist_eps, double ddot_eps);
+bool is_ccw(const Segment& a, const Segment& b, double dist_eps);
+bool is_ccw(const std::vector<Segment>& segs, double dist_eps);
 std::vector<int> isame_vrt(const Segment& a, const Segment& b);
+
+Point2D LineLineIntersect(const Segment& l1, const Segment& l2, double dist_eps);
 
 }
 

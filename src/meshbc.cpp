@@ -101,25 +101,22 @@ bool MeshBC::is_ccw(const std::vector<int> inodes) const {
   int np = (int) inodes.size();
   XMOF2D_ASSERT(np > 2, "Sequence should contain at least three nodes");
   
-  for (int i = 0; i < np; i++)  {
-    if (!XMOF2D::is_ccw(nodes[inodes[i]].get_crd(), nodes[inodes[(i + 1)%np]].get_crd(),
-                        nodes[inodes[(i + 2)%np]].get_crd(), dist_eps(), ddot_eps()))
-      return false;
-  }
-  
-  return true;
+  std::vector<Point2D> pts(np);
+  for (int i = 0; i < np; i++)
+    pts[i] = nodes[inodes[i]].get_crd();
+
+  return XMOF2D::is_ccw(pts, dist_eps());
 }
   
 bool MeshBC::on_same_line(const std::vector<int> inodes) const {
   int np = (int) inodes.size();
   XMOF2D_ASSERT(np > 2, "Sequence should contain at least three nodes");
   
-  for (int i = 0; i < np - 2; i++)  {
-    if (!XMOF2D::on_same_line(nodes[inodes[0]].get_crd(), nodes[inodes[i + 1]].get_crd(),
-                              nodes[inodes[i + 2]].get_crd(), dist_eps(), ddot_eps()))
+  Segment super_seg(nodes[inodes[0]].get_crd(), nodes[inodes[np - 1]].get_crd());
+  for (int i = 0; i < np - 2; i++)
+    if (!super_seg.contains(nodes[inodes[i + 1]].get_crd(), dist_eps()))
       return false;
-  }
-  
+
   return true;
 }
   

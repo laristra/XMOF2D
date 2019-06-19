@@ -16,7 +16,6 @@ namespace XMOF2D {
 
 BaseMesh::BaseMesh(const MeshConfig& config, const IRTolerances& tolerances) {
   dist_eps_ = tolerances.dist_eps;
-  ddot_eps_ = tolerances.ddot_eps;
   area_eps_ = tolerances.area_eps;
   ang_eps_ = tolerances.ang_eps;
   mof_max_iter_ = tolerances.mof_max_iter;

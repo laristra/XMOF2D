@@ -125,8 +125,6 @@ int main(int argc, char** argv) {
   int max_iter_num;
   xmof2d_get_distance_tolerance(&dist_tol);
   std::cout << "Default distance tolerance: " << dist_tol << std::endl;
-  xmof2d_get_dot_product_tolerance(&ddot_tol);
-  std::cout << "Default dot product tolerance: " << ddot_tol << std::endl;
   xmof2d_get_area_tolerance(&area_tol);
   std::cout << "Default area tolerance: " << area_tol << std::endl;
   xmof2d_get_angle_tolerance(&ang_tol);

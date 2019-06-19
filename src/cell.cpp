@@ -118,7 +118,7 @@ SimpleConvex Cell::as_simpleconvex() const {
   for (int inode = 0; inode < nfaces(); inode++)
     scv[inode] = get_node_crd(inode);
   
-  return SimpleConvex(scv, mesh.dist_eps(), mesh.ddot_eps());
+  return SimpleConvex(scv, mesh.dist_eps());
 }
 
 void Cell::calculate_size() {
@@ -133,14 +133,14 @@ void Cell::nodes_from_faces_geo() {
   nodes.clear();
   
   if (is_ccw(center(), get_face(0).get_node_crd(0), get_face(0).get_node_crd(1), 
-             mesh.dist_eps(), mesh.ddot_eps()))
+             mesh.dist_eps()))
     nodes.push_back(get_face(0).get_node_index(0));
   else
     nodes.push_back(get_face(0).get_node_index(1));
   
   for (int iside = 0; iside < nfaces() - 1; iside++) {
     if (is_ccw(center(), get_face(iside).get_node_crd(0), get_face(iside).get_node_crd(1), 
-        mesh.dist_eps(), mesh.ddot_eps()))
+        mesh.dist_eps()))
       nodes.push_back(get_face(iside).get_node_index(1));
     else
       nodes.push_back(get_face(iside).get_node_index(0));
@@ -205,7 +205,7 @@ void Cell::InitializeMinimesh() {
   XMOF2D_ASSERT(minimesh == NULL, "Minimesh is already initialized!");
   
   int nextfaces = nfaces();
-  minimesh = new MiniMesh(*this, mesh.ddot_eps(), mesh.dist_eps());
+  minimesh = new MiniMesh(*this);
   std::vector<int> first_cell_nodes(nextfaces);
   std::vector<int> first_cell_faces(nextfaces);
   std::iota(first_cell_nodes.begin(), first_cell_nodes.end(), 0);
@@ -236,7 +236,7 @@ void Cell::ConstructMinimesh(const std::vector<int>& imats, const std::vector<do
   std::vector<double> opt_d2orgn(nsubcells - 1);
   
   cell_SC.compute_optimal_cuts(vfracs, centroids, mesh.ang_eps(), mesh.area_eps(),
-                               mesh.ddot_eps(), mesh.dist_eps(), mesh.mof_max_iter(),
+                               mesh.dist_eps(), mesh.mof_max_iter(),
                                opt_mat_order, opt_a2OX, opt_d2orgn);
   
   std::vector<int> isc_mat(nsubcells);

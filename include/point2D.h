@@ -46,7 +46,8 @@ struct Point2D {
   void operator/=(double f);
   
   std::vector<double> vec() const;
-  Point2DLine::Position PosWRT2Line(std::vector<double> n, double d2orgn, double eps);
+  Point2DLine::Position PosWRT2Line(std::vector<double> n, double d2orgn, 
+                                    double dist_eps) const;
 };
 
 Point2D operator*(double f, const Point2D& p);
@@ -55,18 +56,12 @@ double distance(const Point2D& p1, const Point2D& p2);
 
 double vpz(const Point2D& a, const Point2D& b, const Point2D& c);
 int vpsign(const Point2D& a, const Point2D& b, const Point2D& c, 
-           double dist_eps, double ddot_eps);
-int dpsign(const Point2D& a, const Point2D& b, const Point2D& c, 
-           double dist_eps, double ddot_eps);
+           double dist_eps);
 bool is_cw(const Point2D& a, const Point2D& b, const Point2D& c, 
-           double dist_eps, double ddot_eps);
+           double dist_eps);
 bool is_ccw(const Point2D& a, const Point2D& b, const Point2D& c, 
-            double dist_eps, double ddot_eps);
-bool is_ccw(const std::vector<Point2D>& p, double dist_eps, double ddot_eps);
-bool on_same_line(const Point2D& a, const Point2D& b, const Point2D& c, 
-                  double dist_eps, double ddot_eps);
-
-Point2D LineLineIntersect(const std::vector<Point2D>& l1p, const std::vector<Point2D>& l2p, double eps);
+            double dist_eps);
+bool is_ccw(const std::vector<Point2D>& p, double dist_eps);
 
 static const Point2D BAD_POINT(DBL_MAX,DBL_MAX);
 
