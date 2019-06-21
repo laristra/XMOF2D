@@ -86,6 +86,19 @@ bool Segment::contains(const Point2D& p, double dist_eps) const {
   return (std::fabs(vpz(v[0], p, v[1]))/seg_size < dist_eps);
 }
 
+bool Segment::is_interior(const Point2D& p, double dist_eps) const {
+  double seg_size = size();
+
+  for (int iv = 0; iv < 2; iv++) {
+    double dpv = distance(v[iv], p);
+
+    if ( (dpv < dist_eps) || (dpv >= sqrt(pow2(seg_size) + pow2(dist_eps))) )
+      return false;
+  }
+
+  return (std::fabs(vpz(v[0], p, v[1]))/seg_size < dist_eps);
+}
+
 SegLine::Position Segment::PosWRT2Line(std::vector<double> n, double d2orgn, 
                                        double dist_eps) const{
   Point2DLine::Position v_pos[2];
@@ -134,12 +147,12 @@ Point2D Segment::LineIntersect(std::vector<double> n, double d2orgn,
     bool use_bisections = false;
     double t_eps = dist_eps/dnrm2(sdv);
     double t = std::fabs(-d2orgn + ddot(v[0].vec(), n)) / cpz;
-    if ( (t < t_eps) || (t > 1.0 - t_eps) )
+    if ( (t <= t_eps) || (t >= 1.0 - t_eps) )
       use_bisections = true;
     else {
       dscal(t, sdv);
       pint = v[0] + sdv;
-      if ( (dist_to_line(pint) >= dist_eps) || 
+      if ( !is_interior(pint, dist_eps) || 
            (pint.PosWRT2Line(n, d2orgn, dist_eps) != Point2DLine::Position::ON))
         use_bisections = true;
     }

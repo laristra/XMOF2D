@@ -37,6 +37,7 @@ public:
   
   int     npoints() const { return 2; }
   bool    contains(const Point2D& p, double dist_eps) const;
+  bool    is_interior(const Point2D& p, double dist_eps) const;
   double  dist_to_seg(const Point2D& p) const;
   double  dist_to_line(const Point2D& p) const;
   

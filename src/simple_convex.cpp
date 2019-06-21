@@ -166,26 +166,7 @@ bool SimpleConvex::is_boundary(const Point2D& p, double dist_eps) const {
   return false;
 }
 
-bool SimpleConvex::is_interior(const Point2D& p, double dist_eps) const {
-  int wn = 0;
-  int nnodes = nfaces();
-  for (int inode = 0; inode < nnodes; inode++) {
-    int inextnode = (inode + 1)%nnodes;
-    if (v[inode].y <= p.y) {
-      if (v[inextnode].y  > p.y)
-        if (is_ccw(v[inode], v[inextnode], p, dist_eps))
-          ++wn;
-    }
-    else {
-      if (v[inextnode].y <= p.y)
-        if (is_cw(v[inode], v[inextnode], p, dist_eps))
-          --wn;
-    }
-  }
-  return wn;
-}
-
-  SimpleConvexLine::Intersect SimpleConvex::SimpleConvexCutByLine(
+SimpleConvexLine::Intersect SimpleConvex::SimpleConvexCutByLine(
     double a2OX, double d2orgn,
     std::vector<SimpleConvex>& pieces,
     double dist_eps, bool area_check_on) const {
@@ -256,9 +237,15 @@ bool SimpleConvex::is_interior(const Point2D& p, double dist_eps) const {
       SimpleConvexLine::Intersect::THROUGH_NODE;
   
   pieces.resize(2);
+  try {
   pieces[0] = SimpleConvex(v_below, dist_eps);
   pieces[1] = SimpleConvex(v_above, dist_eps);
-  
+  }
+  catch (Exception e) {
+  pieces[0] = SimpleConvex(v_below, dist_eps);
+  pieces[1] = SimpleConvex(v_above, dist_eps);
+  }   
+
   return SimpleConvexLine::Intersect::VALID_INTERSECT;
 }
 
