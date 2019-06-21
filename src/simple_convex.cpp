@@ -237,14 +237,8 @@ SimpleConvexLine::Intersect SimpleConvex::SimpleConvexCutByLine(
       SimpleConvexLine::Intersect::THROUGH_NODE;
   
   pieces.resize(2);
-  try {
   pieces[0] = SimpleConvex(v_below, dist_eps);
   pieces[1] = SimpleConvex(v_above, dist_eps);
-  }
-  catch (Exception e) {
-  pieces[0] = SimpleConvex(v_below, dist_eps);
-  pieces[1] = SimpleConvex(v_above, dist_eps);
-  }   
 
   return SimpleConvexLine::Intersect::VALID_INTERSECT;
 }
