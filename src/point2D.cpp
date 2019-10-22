@@ -122,9 +122,10 @@ bool is_ccw(const std::vector<Point2D>& p, double dist_eps) {
   XMOF2D_ASSERT(np > 2, "Sequence should contain at least three points");
 
   std::vector<bool> is_hanging(np, false);
-  for (int i = 0; i < np; i++)
-    if (Segment(p[i], p[(i + 2)%np]).contains(p[(i + 1)%np], dist_eps))
+  for (int i = 0, ifp = 0; i < np; i++)
+    if (Segment(p[ifp], p[(i + 2)%np]).contains(p[(i + 1)%np], dist_eps))
       is_hanging[(i + 1)%np] = true;
+    else ifp = i + 1;
 
   for (int i = 0; i < np; i++)  {
     int imp = (i + 1)%np;
